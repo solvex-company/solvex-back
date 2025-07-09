@@ -1,15 +1,17 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/user.dto';
+import { CreateUserDto, loginDto } from './dto/user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { Credentials } from './entities/Credentials.entity';
 import * as bcrypt from 'bcrypt';
 import { UserResponseDto } from './dto/userResponse.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UsersService {
@@ -18,6 +20,7 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Credentials)
     private readonly credentialsRepository: Repository<Credentials>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async create(userData: CreateUserDto): Promise<UserResponseDto> {
@@ -76,5 +79,30 @@ export class UsersService {
       typeId: { id_typeid: typeId.id_typeid, name: typeId.name },
       role: { id_role: role.id_role, role_name: role.role_name },
     };
+  }
+
+  async signIn(credentials: loginDto) {
+    const findUser: Credentials | null =
+      await this.credentialsRepository.findOne({
+        where: { email: credentials.email },
+        relations: ['user', 'user.role'],
+      });
+
+    if (!findUser) throw new BadRequestException('Incorrect credentials');
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const passwordMatch = await bcrypt.compare(
+      credentials.password,
+      findUser.password,
+    );
+    if (!passwordMatch) throw new BadRequestException('Incorrect credentials');
+
+    const payload = {
+      id: findUser.id_credentials,
+      email: findUser.email,
+      role: findUser.user.role.id_role,
+    };
+    const token = this.jwtService.sign(payload);
+    return token;
   }
 }

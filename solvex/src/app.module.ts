@@ -7,6 +7,8 @@ import { RoleSeeder } from './seeders/role.seeder';
 import { Roles } from './users/entities/Roles.entity';
 import { TypeIdSeeder } from './seeders/typeId.seeder';
 import { TypeId } from './users/entities/typeId.entity';
+import { JwtModule } from '@nestjs/jwt';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -21,6 +23,12 @@ import { TypeId } from './users/entities/typeId.entity';
     }),
     TypeOrmModule.forFeature([Roles, TypeId]),
     UsersModule,
+    AuthModule,
+    JwtModule.register({
+      global: true,
+      signOptions: { expiresIn: '60m' },
+      secret: process.env.JWT_SECRET,
+    }),
   ],
   controllers: [],
   providers: [RoleSeeder, TypeIdSeeder],

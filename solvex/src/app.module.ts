@@ -1,4 +1,9 @@
-import { Module, OnApplicationBootstrap } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import typeOrmConfig from './config/typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -9,6 +14,7 @@ import { TypeIdSeeder } from './seeders/typeId.seeder';
 import { TypeId } from './users/entities/typeId.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
+import { LoggerMiddleware } from './middleware/logger.middleware';
 
 @Module({
   imports: [
@@ -33,11 +39,15 @@ import { AuthModule } from './auth/auth.module';
   controllers: [],
   providers: [RoleSeeder, TypeIdSeeder],
 })
-export class AppModule implements OnApplicationBootstrap {
+export class AppModule implements OnApplicationBootstrap, NestModule {
   constructor(
     private readonly roleSeeder: RoleSeeder,
     private readonly typeIdSeeder: TypeIdSeeder,
   ) {}
+
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
 
   async onApplicationBootstrap() {
     await this.roleSeeder.seed();

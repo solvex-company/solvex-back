@@ -46,7 +46,7 @@ export class AuthService {
       identification_number: userData.identification_number,
       phone: userData.phone.toString(),
       typeId: { id_typeid: userData.typeId },
-      role: { id_role: userData.role },
+      role: { id_role: userData.role ?? 3 },
     });
 
     const savedUser = await this.usersRepository.save(user);

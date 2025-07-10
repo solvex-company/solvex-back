@@ -39,10 +39,9 @@ en el json 1 se pueden omitir los campos de Role y Second_name, al ser opciones 
 
     {
         "email": "prueba@example.com",
-		"password": "$2a$10$Ejemplo",
-        "first_name": "prueba",
-		"first_surname": "prueba",
-		"second_surname": "prueba",
+		"password": "12345",
+        "name": "prueba",
+		"lastname": "prueba",
         "identification_number": "12345673",
         "phone": 1234567890,
         "typeId": "1"
@@ -54,11 +53,9 @@ en el json 1 se pueden omitir los campos de Role y Second_name, al ser opciones 
 
         {
         "email": "prueba@example.com",
-		"password": "$2a$10$Ejemplo",
-        "first_name": "prueba",
-		"second_name": "prueba", →→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→ Este campo puede ser omitido ya que tiene como valor default ''
-		"first_surname": "prueba",
-		"second_surname": "prueba",
+		"password": "12345",
+        "name": "prueba",
+		"lastname": "prueba",
         "identification_number": "12345673",
         "phone": 1234567890,
         "typeId": "1",

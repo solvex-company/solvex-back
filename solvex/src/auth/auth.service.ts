@@ -39,10 +39,8 @@ export class AuthService {
     }
 
     const user: User = this.usersRepository.create({
-      first_name: userData.first_name,
-      second_name: userData.second_name || '',
-      first_surname: userData.first_surname,
-      second_surname: userData.second_surname,
+      name: userData.name,
+      lastname: userData.lastname,
       identification_number: userData.identification_number,
       phone: userData.phone.toString(),
       typeId: { id_typeid: userData.typeId },

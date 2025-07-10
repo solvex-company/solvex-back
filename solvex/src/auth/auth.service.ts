@@ -31,6 +31,9 @@ export class AuthService {
       throw new ConflictException('Email already exist');
     }
 
+    if (userData.password !== userData.password2)
+      throw new BadRequestException('Passwords do not match');
+
     const idNumberExists = await this.usersRepository.findOne({
       where: { identification_number: userData.identification_number },
     });

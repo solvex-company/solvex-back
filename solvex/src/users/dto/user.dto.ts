@@ -51,6 +51,22 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
+    description: 'The password of the user for verification',
+    example: 'Password123!',
+  })
+  @IsNotEmpty()
+  @MinLength(8)
+  @MaxLength(15)
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/,
+    {
+      message:
+        'The password must contain a one uppercas letter, one lowercase letter, one number an one special character.',
+    },
+  )
+  password2: string;
+
+  @ApiProperty({
     description: 'identification num of the user',
     example: '123456789',
   })

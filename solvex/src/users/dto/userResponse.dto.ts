@@ -5,16 +5,10 @@ export class UserResponseDto {
   id_user: string;
 
   @ApiProperty()
-  first_name: string;
+  name: string;
 
   @ApiProperty()
-  second_name: string;
-
-  @ApiProperty()
-  first_surname: string;
-
-  @ApiProperty()
-  second_surname: string;
+  lastname: string;
 
   @ApiProperty()
   identification_number: string;

@@ -16,16 +16,7 @@ export class CreateUserDto {
   })
   @IsNotEmpty()
   @IsString()
-  first_name: string;
-
-  @ApiProperty({
-    required: false,
-    default: '',
-    description: 'The name of the user',
-    example: 'second name example',
-  })
-  @IsString()
-  second_name?: string;
+  name: string;
 
   @ApiProperty({
     description: 'The name of the user',
@@ -33,15 +24,7 @@ export class CreateUserDto {
   })
   @IsNotEmpty()
   @IsString()
-  first_surname: string;
-
-  @ApiProperty({
-    description: 'The name of the user',
-    example: 'first surname example',
-  })
-  @IsNotEmpty()
-  @IsString()
-  second_surname: string;
+  lastname: string;
 
   @ApiProperty({
     description: 'The mail of the user want use to register',

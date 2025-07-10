@@ -16,16 +16,10 @@ export class User {
   id_user: string;
 
   @Column({ type: 'varchar', length: 50, nullable: false })
-  first_name: string;
+  name: string;
 
   @Column({ type: 'varchar', length: 50, nullable: false })
-  second_name: string;
-
-  @Column({ type: 'varchar', length: 50, nullable: false })
-  first_surname: string;
-
-  @Column({ type: 'varchar', length: 50, nullable: false })
-  second_surname: string;
+  lastname: string;
 
   @Column({ type: 'varchar', length: 30, unique: true })
   identification_number: string;

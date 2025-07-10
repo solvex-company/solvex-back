@@ -8,6 +8,7 @@ import { Roles } from './users/entities/Roles.entity';
 import { TypeIdSeeder } from './seeders/typeId.seeder';
 import { TypeId } from './users/entities/typeId.entity';
 import { JwtModule } from '@nestjs/jwt';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { JwtModule } from '@nestjs/jwt';
     }),
     TypeOrmModule.forFeature([Roles, TypeId]),
     UsersModule,
+    AuthModule,
     JwtModule.register({
       global: true,
       signOptions: { expiresIn: '60m' },

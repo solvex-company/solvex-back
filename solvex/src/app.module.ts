@@ -15,6 +15,9 @@ import { TypeId } from './users/entities/typeId.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
 import { LoggerMiddleware } from './middleware/logger.middleware';
+import { UserSeeder } from './seeders/users.seeder';
+import { User } from './users/entities/user.entity';
+import { Credentials } from './users/entities/Credentials.entity';
 
 @Module({
   imports: [
@@ -27,7 +30,7 @@ import { LoggerMiddleware } from './middleware/logger.middleware';
       useFactory: (configService: ConfigService) =>
         configService.get('typeorm')!,
     }),
-    TypeOrmModule.forFeature([Roles, TypeId]),
+    TypeOrmModule.forFeature([Roles, TypeId, User, Credentials]),
     UsersModule,
     AuthModule,
     JwtModule.register({
@@ -37,12 +40,13 @@ import { LoggerMiddleware } from './middleware/logger.middleware';
     }),
   ],
   controllers: [],
-  providers: [RoleSeeder, TypeIdSeeder],
+  providers: [RoleSeeder, TypeIdSeeder, UserSeeder],
 })
 export class AppModule implements OnApplicationBootstrap, NestModule {
   constructor(
     private readonly roleSeeder: RoleSeeder,
     private readonly typeIdSeeder: TypeIdSeeder,
+    private readonly userSeeder: UserSeeder,
   ) {}
 
   configure(consumer: MiddlewareConsumer) {
@@ -52,5 +56,6 @@ export class AppModule implements OnApplicationBootstrap, NestModule {
   async onApplicationBootstrap() {
     await this.roleSeeder.seed();
     await this.typeIdSeeder.seed();
+    await this.userSeeder.seed();
   }
 }

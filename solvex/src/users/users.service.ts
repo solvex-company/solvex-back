@@ -15,4 +15,13 @@ export class UsersService {
     return this.usersRepository.find();
   }
   ///// fin prueba auth
+
+  async getUserById(userId: string): Promise<User> {
+    const user = await this.usersRepository.findOne({
+      where: { id_user: userId },
+      relations: ['credentials', 'typeId', 'role'],
+    });
+    if (!user) throw new Error('User not found');
+    return user;
+  }
 }

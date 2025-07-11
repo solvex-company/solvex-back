@@ -18,6 +18,7 @@ import { LoggerMiddleware } from './middleware/logger.middleware';
 import { UserSeeder } from './seeders/users.seeder';
 import { User } from './users/entities/user.entity';
 import { Credentials } from './users/entities/Credentials.entity';
+import { TicketsModule } from './tickets/tickets.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { Credentials } from './users/entities/Credentials.entity';
       signOptions: { expiresIn: '60m' },
       secret: process.env.JWT_SECRET,
     }),
+    TicketsModule,
   ],
   controllers: [],
   providers: [RoleSeeder, TypeIdSeeder, UserSeeder],

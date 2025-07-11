@@ -14,7 +14,7 @@ export class TypeIdSeeder {
     const defaultTypes = [
       { id_typeid: 1, name: 'C.C' },
       { id_typeid: 2, name: 'D.N.I' },
-      { id_typeid: 3, name: 'T.I' },
+      { id_typeid: 3, name: 'Pasaporte' },
     ];
 
     for (const typeData of defaultTypes) {

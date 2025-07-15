@@ -21,6 +21,7 @@ import { Credentials } from './users/entities/Credentials.entity';
 import { TicketsModule } from './tickets/tickets.module';
 import { TicketStatusSeeder } from './seeders/statusTickets.seeder';
 import { TicketStatus } from './tickets/entities/statusTickets.entity';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { TicketStatus } from './tickets/entities/statusTickets.entity';
       secret: process.env.JWT_SECRET,
     }),
     TicketsModule,
+    PaymentsModule,
   ],
   controllers: [],
   providers: [RoleSeeder, TypeIdSeeder, UserSeeder, TicketStatusSeeder],

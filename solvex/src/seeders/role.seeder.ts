@@ -1,4 +1,3 @@
-// src/database/seeders/role.seeder.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Roles } from '../users/entities/Roles.entity';

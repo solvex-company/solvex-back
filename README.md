@@ -45,6 +45,7 @@ en el json 1 se pueden omitir los campos de Role y Second_name, al ser opciones 
     {
         "email": "prueba@example.com",
     	"password": "12345",
+    	"password2": "12345",
         "name": "prueba",
     	"lastname": "prueba",
         "identification_number": "12345673",
@@ -59,6 +60,7 @@ en el json 1 se pueden omitir los campos de Role y Second_name, al ser opciones 
         {
         "email": "prueba@example.com",
       "password": "12345",
+      "password2": "12345",
         "name": "prueba",
       "lastname": "prueba",
         "identification_number": "12345673",
@@ -71,19 +73,27 @@ en el json 1 se pueden omitir los campos de Role y Second_name, al ser opciones 
 ### Ejemplo de respuesta al realizar register:
 
 {
-"id_user": "872480a5-57a8-442c-83d2-45a19d2a37a3",
-"first_name": "prueba",
-"second_name": "prueba",
-"first_surname": "prueba",
-"second_surname": "prueba",
-"identification_number": "123456173",
+"id_user": "45179b9e-734b-4e03-8f34-69b5e08073c0",
+"name": "prueba",
+"lastname": "prueba",
+"identification_number": "123456723",
 "phone": "1234567890",
 "typeId": {
 "id_typeid": 1,
 "name": "C.C"
 },
 "role": {
-"id_role": 1,
-"role_name": "Admin"
+"id_role": 3,
+"role_name": "Empleado"
 }
 }
+
+### Datos temporal de seeders para demo
+
+Admin:
+email: 'admin@solvex.com',
+password: 'Admin123!',
+
+Soporte:
+email: 'soporte@solvex.com',
+password: 'Soporte123!',

@@ -1,4 +1,3 @@
-// src/seeders/type-id.seeder.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TypeId } from 'src/users/entities/typeId.entity';
@@ -16,7 +15,6 @@ export class TypeIdSeeder {
       { id_typeid: 1, name: 'C.C' },
       { id_typeid: 2, name: 'D.N.I' },
       { id_typeid: 3, name: 'Pasaporte' },
-      { id_typeid: 4, name: 'T.I' },
     ];
 
     for (const typeData of defaultTypes) {

@@ -1,4 +1,3 @@
-import { TicketStatus } from 'src/tickets/entities/statusTickets.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
@@ -7,6 +6,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { TicketStatus } from './statusTickets.entity';
 
 @Entity({ name: 'tickets' })
 export class Ticket {
@@ -22,18 +22,19 @@ export class Ticket {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   creation_date: Date;
 
-  @Column({ type: 'timestamp', nullable: false })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   closing_date: Date;
 
-  @Column({ type: 'varchar', length: 500 })
+  @Column({ type: 'varchar', default: 'no image' })
   img_1: string;
 
-  @Column({ type: 'varchar', length: 500 })
+  @Column({ type: 'varchar', default: 'no image' })
   img_2: string;
 
-  @Column({ type: 'varchar', length: 500 })
+  @Column({ type: 'varchar', default: 'no image' })
   img_3: string;
 
+  @Column({ default: 1 })
   @ManyToOne(() => TicketStatus, (status) => status.id_status)
   @JoinColumn({ name: 'id_status' })
   id_status: TicketStatus;

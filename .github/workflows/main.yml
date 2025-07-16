@@ -30,6 +30,6 @@ jobs:
               uses: docker/build-push-action@v5
               with:
                   context: .
-                  file: ./Dockerfile
+                  file: ${{ github.workspace }}/Dockerfile
                   push: true
                   tags: ${{ secrets.DOCKERHUB_USERNAME }}/solvex-back:latest

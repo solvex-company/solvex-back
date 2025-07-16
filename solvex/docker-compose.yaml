@@ -1,0 +1,23 @@
+services:
+  nestapp:
+    build: ./
+    ports:
+      - '4001:4000'
+    env_file:
+      - .env.development
+    depends_on:
+      - postgresdb
+    # healthcheck:
+    #     interval: 5s
+    #     timeout: 5s
+    #     retries: 5
+
+  postgresdb:
+    image: postgres
+    env_file:
+      - .env.development
+    volumes:
+      - postgres_data:/var/lib/postgresql/data:rw
+
+volumes:
+  postgres_data:

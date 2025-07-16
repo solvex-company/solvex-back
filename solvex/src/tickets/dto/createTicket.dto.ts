@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString, IsOptional } from 'class-validator';
-// agregar en clas-validator IsOptional
+import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
 
 export class CreateTicketDto {
   @ApiProperty({

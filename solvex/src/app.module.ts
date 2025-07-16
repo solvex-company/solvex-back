@@ -18,6 +18,8 @@ import { LoggerMiddleware } from './middleware/logger.middleware';
 import { UserSeeder } from './seeders/users.seeder';
 import { User } from './users/entities/user.entity';
 import { Credentials } from './users/entities/Credentials.entity';
+import { FileUploadModule } from './file-upload/file-upload.module';
+import { FileUploadModule } from './file-upload/file-upload.module';
 
 @Module({
   imports: [
@@ -38,6 +40,7 @@ import { Credentials } from './users/entities/Credentials.entity';
       signOptions: { expiresIn: '60m' },
       secret: process.env.JWT_SECRET,
     }),
+    FileUploadModule,
   ],
   controllers: [],
   providers: [RoleSeeder, TypeIdSeeder, UserSeeder],

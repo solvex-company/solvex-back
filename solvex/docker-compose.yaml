@@ -1,6 +1,6 @@
 services:
   nestapp:
-    image:
+    image: companysolvex/solvex-back:latest
     ports:
       - '4001:4000'
     env_file:

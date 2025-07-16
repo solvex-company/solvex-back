@@ -12,15 +12,15 @@ import {
 export class CreateUserDto {
   @ApiProperty({
     description: 'The name of the user',
-    example: 'first name example',
+    example: 'Carlos',
   })
   @IsNotEmpty()
   @IsString()
   name: string;
 
   @ApiProperty({
-    description: 'The name of the user',
-    example: 'first surname example',
+    description: 'The lastname of the user',
+    example: 'Perez',
   })
   @IsNotEmpty()
   @IsString()

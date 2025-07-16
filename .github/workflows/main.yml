@@ -29,7 +29,7 @@ jobs:
             - name: Build and push
               uses: docker/build-push-action@v5
               with:
-                  context: .
-                  file: ${{ github.workspace }}/Dockerfile
+                  context: ./solvex
+                  file: ./solvex/Dockerfile
                   push: true
                   tags: ${{ secrets.DOCKERHUB_USERNAME }}/solvex-back:latest

@@ -17,7 +17,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
-  @Post('create-with-images')
+  @Post('createTicket')
   @UseGuards(AuthGuard)
   @UseInterceptors(FilesInterceptor('images', 3))
   async createWithImages(

@@ -20,7 +20,7 @@ export class CreateUserDto {
 
   @ApiProperty({
     description: 'The lastname of the user',
-    example: 'Perez',
+    example: 'Gonzalez',
   })
   @IsNotEmpty()
   @IsString()

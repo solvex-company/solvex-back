@@ -1,11 +1,18 @@
 import { User } from 'src/users/entities/user.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { Plan } from './entity.plan';
 import { Payment } from './entity.payment';
 
 @Entity({ name: 'subscription' })
 export class Subscription {
-  @ManyToOne(() => User, (user) => user.subscriptions)
+  @OneToOne(() => User, (user) => user.subscriptions)
   @JoinColumn({ name: 'id_admin' })
   id_admin: User;
 

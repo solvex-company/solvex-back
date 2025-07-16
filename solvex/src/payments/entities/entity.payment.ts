@@ -1,9 +1,9 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { Subscription } from './entity.subscription';
 
 @Entity({ name: 'payments' })
 export class Payment {
-  @ManyToOne(() => Subscription, (subscription) => subscription.payments)
+  @OneToOne(() => Subscription, (subscription) => subscription.payments)
   @JoinColumn({ name: 'id_subscription' })
   id_subscription: Subscription;
 

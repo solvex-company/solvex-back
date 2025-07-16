@@ -1,4 +1,3 @@
-import { User } from 'src/users/entities/user.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Subscription } from './entity.subscription';
 
@@ -21,9 +20,6 @@ export class Plan {
 
   @Column({ type: 'decimal', nullable: false })
   annual_price: number;
-
-  @OneToMany(() => User, (user) => user.plan)
-  users: User[];
 
   @OneToMany(() => Subscription, (subscription) => subscription.plan)
   subscriptions: Subscription[];

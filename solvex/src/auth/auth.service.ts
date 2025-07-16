@@ -103,6 +103,7 @@ export class AuthService {
       email: findUser.email,
       id_role: findUser.user.role.id_role,
       name: findUser.user.name,
+      lastname: findUser.user.lastname,
       phone: findUser.user.phone,
       identification_number: findUser.user.identification_number,
     };

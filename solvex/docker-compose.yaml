@@ -1,16 +1,12 @@
 services:
   nestapp:
-    build: ./
+    image:
     ports:
       - '4001:4000'
     env_file:
       - .env.development
     depends_on:
       - postgresdb
-    # healthcheck:
-    #     interval: 5s
-    #     timeout: 5s
-    #     retries: 5
 
   postgresdb:
     image: postgres

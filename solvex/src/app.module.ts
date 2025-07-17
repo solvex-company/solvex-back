@@ -21,13 +21,14 @@ import { Credentials } from './users/entities/Credentials.entity';
 import { TicketsModule } from './tickets/tickets.module';
 import { TicketStatusSeeder } from './seeders/statusTickets.seeder';
 import { TicketStatus } from './tickets/entities/statusTickets.entity';
+import Oauth2Config from './config/OAuth2.config';
 import { FileUpload } from './file-upload/entities/file-upload.entity';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [typeOrmConfig],
+      load: [typeOrmConfig, Oauth2Config],
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],

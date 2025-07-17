@@ -97,3 +97,48 @@ password: 'Admin123!',
 Soporte:
 email: 'soporte@solvex.com',
 password: 'Soporte123!',
+
+### crear tickets
+
+la ruta a consumir para la creacion de tickets es: tickets/createTicket
+
+el json de ejemplo para consumir la ruta:
+
+En Header:
+
+1. debe estar el contet-type con multipart/foorm-data
+2. Agregar un apartado de "Authorization" y como argumento "Bearer " seguido del token generado por jwt
+
+En Body
+
+1. Un campo "title" seguido de los datos ingresados por el usuario capturados desde el front.
+2. Un campo "description" seguido de los datos ingresados por el usuario capturados desde el front.
+   CAMPOS OPCIONALES:
+   es posible agregar de 0 a 3 imagenes por loq ue los campos de imagenes pueden estar o no.
+3. El campo para agregar imagenes y todos deben estar apartados, todos deben llamarse "images"
+
+En caso de dudas se anexara una imagen al discord para un ejemplo más grafico
+
+# Ejemplo respuesta Json
+
+{
+"id_ticket": 2,
+"title": "prueba",
+"description": "pruebass",
+"creation_date": "2025-07-16T17:41:06.848Z",
+"closing_date": null,
+"img_1": "https://res.cloudinary.com/ds02h9dbp/image/upload/v1752687666/tickets/vc4ad3sddnp1grwosvhj.jpg",
+"img_2": "no image",
+"img_3": "no image",
+"id_status": {
+"id_status": 1,
+"name": "pending"
+},
+"id_empleado": {
+"id_user": "17e79b9f-88e6-4a2f-9cf7-c497c4929250",
+"name": "Admin",
+"lastname": "Solvex",
+"identification_number": "987654321",
+"phone": "313564564564"
+}
+}

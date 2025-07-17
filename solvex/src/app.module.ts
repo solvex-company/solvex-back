@@ -22,6 +22,7 @@ import { TicketsModule } from './tickets/tickets.module';
 import { TicketStatusSeeder } from './seeders/statusTickets.seeder';
 import { TicketStatus } from './tickets/entities/statusTickets.entity';
 import Oauth2Config from './config/OAuth2.config';
+import { FileUpload } from './file-upload/entities/file-upload.entity';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import Oauth2Config from './config/OAuth2.config';
       secret: process.env.JWT_SECRET,
     }),
     TicketsModule,
+    FileUpload,
   ],
   controllers: [],
   providers: [RoleSeeder, TypeIdSeeder, UserSeeder, TicketStatusSeeder],

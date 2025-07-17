@@ -29,10 +29,11 @@ Repositorio del Back del proyecto final.
 - DB_PASSWORD = 'Aqui va la constraseña para la pase de datos'
 - JWT_SECRET = 'Aqui va la secret key para el JWT' || 'clavesecreta'
 
-- AUTH0_SECRET='Generar contrasena utilizando utilizando el siguiente comando en la terminal: "openssl rand -base64 32"'
-- AUTH0_AUDIENCE='http://localhost:3000'
-- AUTH0_CLIENT_ID='Aqui va el id de cliente'
-- AUTH0_BASE_URL='Aqui va el URL'
+Para autenticacion de google:
+
+- GOOGLE_CLIENT_ID='Aqui va el client ID de google'
+- GOOGLE_CLIENT_SECRET='Aqui va el client secret de google'
+- GOOGLE_CALLBACK_URL='Aqui va el callback URL'
 
 - Importante: Crear .env.development al nivel de la carpeta principal solvex y crear primero la base de datos en postgres
 

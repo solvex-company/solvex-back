@@ -22,6 +22,7 @@ import { TicketsModule } from './tickets/tickets.module';
 import { TicketStatusSeeder } from './seeders/statusTickets.seeder';
 import { TicketStatus } from './tickets/entities/statusTickets.entity';
 import { PaymentsModule } from './payments/payments.module';
+import { PlansSeeder } from './seeders/plans.seeder';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ export class AppModule implements OnApplicationBootstrap, NestModule {
     private readonly typeIdSeeder: TypeIdSeeder,
     private readonly userSeeder: UserSeeder,
     private readonly ticketStatusSeeder: TicketStatusSeeder,
+    private readonly plansSeeder: PlansSeeder,
   ) {}
 
   configure(consumer: MiddlewareConsumer) {
@@ -65,5 +67,6 @@ export class AppModule implements OnApplicationBootstrap, NestModule {
     await this.typeIdSeeder.seed();
     await this.userSeeder.seed();
     await this.ticketStatusSeeder.seed();
+    await this.plansSeeder.seed();
   }
 }

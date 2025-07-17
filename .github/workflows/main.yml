@@ -3,7 +3,7 @@ name: deploy
 on:
     push:
         branches:
-            - "andrea"
+            - ["main", "development"]
 
 jobs:
     build:

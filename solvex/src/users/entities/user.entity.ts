@@ -25,7 +25,7 @@ export class User {
   identification_number: string | null;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
-  phone: string;
+  phone: string | null;
 
   @ManyToOne(() => TypeId, (type) => type.users, { nullable: true })
   @JoinColumn({ name: 'id_typeid' })

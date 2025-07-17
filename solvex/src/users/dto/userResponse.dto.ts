@@ -14,7 +14,7 @@ export class UserResponseDto {
   identification_number: string | null;
 
   @ApiProperty()
-  phone: string;
+  phone: string | null;
 
   @ApiProperty()
   typeId: {

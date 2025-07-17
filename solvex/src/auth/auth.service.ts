@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   BadRequestException,
   ConflictException,
@@ -12,6 +14,7 @@ import { Credentials } from 'src/users/entities/Credentials.entity';
 import * as bcrypt from 'bcrypt';
 import { UserResponseDto } from 'src/users/dto/userResponse.dto';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +24,7 @@ export class AuthService {
     @InjectRepository(Credentials)
     private readonly credentialsRepository: Repository<Credentials>,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   async create(userData: CreateUserDto): Promise<UserResponseDto> {
@@ -103,6 +107,57 @@ export class AuthService {
       email: findUser.email,
       id_role: findUser.user.role.id_role,
     };
+    const token = this.jwtService.sign(payload);
+    return token;
+  }
+
+  async validateUser(userData) {
+    console.log('Validate User');
+    console.log(userData);
+
+    if (!userData?.email) {
+      throw new BadRequestException('Email is required');
+    }
+
+    const user = await this.credentialsRepository.findOne({
+      where: { email: userData.email },
+      relations: ['user', 'user.typeId', 'user.role'],
+    });
+
+    if (user) {
+      return {
+        id: user.user.id_user,
+        email: user.email,
+        id_role: user.user.role.id_role,
+      };
+    }
+
+    const newUser: User = this.usersRepository.create({
+      name: userData.displayName,
+      lastname: userData.familyName,
+      identification_number: null,
+      phone: '',
+      role: { id_role: userData.role ?? 3 },
+    });
+
+    const savedUser = await this.usersRepository.save(newUser);
+
+    const credentials = this.credentialsRepository.create({
+      email: userData.email,
+      password: null,
+      user: savedUser,
+    });
+
+    await this.credentialsRepository.save(credentials);
+
+    return {
+      id: savedUser.id_user,
+      email: credentials.email,
+      id_role: savedUser.role.id_role,
+    };
+  }
+
+  createJwtToken(payload) {
     const token = this.jwtService.sign(payload);
     return token;
   }

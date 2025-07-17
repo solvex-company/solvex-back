@@ -29,7 +29,7 @@ Repositorio del Back del proyecto final.
 - DB_PASSWORD = 'Aqui va la constraseña para la pase de datos'
 - JWT_SECRET = 'Aqui va la secret key para el JWT' || 'clavesecreta'
 
-- AUTH0_SECRET='A long, randomly-generated string stored in env'
+- AUTH0_SECRET='Generar contrasena utilizando utilizando el siguiente comando en la terminal: "openssl rand -base64 32"'
 - AUTH0_AUDIENCE='http://localhost:3000'
 - AUTH0_CLIENT_ID='Aqui va el id de cliente'
 - AUTH0_BASE_URL='Aqui va el URL'

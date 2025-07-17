@@ -6,10 +6,18 @@ import { User } from 'src/users/entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TicketStatus } from './entities/statusTickets.entity';
 import { FileUploadModule } from 'src/file-upload/file-upload.module';
+import { Area } from './entities/areas.entity';
+import { ResolutionTicket } from './entities/resolutionsTicket';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Ticket, TicketStatus]),
+    TypeOrmModule.forFeature([
+      User,
+      Ticket,
+      TicketStatus,
+      Area,
+      ResolutionTicket,
+    ]),
     FileUploadModule,
   ],
   controllers: [TicketsController],

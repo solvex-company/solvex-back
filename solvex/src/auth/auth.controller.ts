@@ -43,7 +43,7 @@ export class AuthController {
 
       const token = this.authService.createJwtToken(payload);
 
-      return { token: token };
+      return token;
     } catch (err) {
       console.error('Redirect handler error:', err);
       throw new UnauthorizedException('Google login failed');

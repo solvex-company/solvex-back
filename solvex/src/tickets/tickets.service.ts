@@ -152,4 +152,28 @@ export class TicketsService {
       throw new InternalServerErrorException('Could not retrieve areas');
     }
   }
+
+  async getAllTickets(): Promise<Ticket[]> {
+    try {
+      this.logger.log('Fetching all tickets from database');
+
+      const tickets = await this.ticketRepository.find({
+        relations: ['id_empleado', 'id_status', 'area'],
+        order: {
+          creation_date: 'DESC',
+        },
+      });
+
+      if (!tickets || tickets.length === 0) {
+        this.logger.warn('No tickets found in database');
+        return [];
+      }
+
+      this.logger.log(`Found ${tickets.length} tickets`);
+      return tickets;
+    } catch (error) {
+      this.logger.error('Failed to fetch tickets', error.stack);
+      throw new InternalServerErrorException('Could not retrieve tickets');
+    }
+  }
 }

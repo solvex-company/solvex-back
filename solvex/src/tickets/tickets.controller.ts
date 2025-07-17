@@ -42,4 +42,10 @@ export class TicketsController {
   getAreas() {
     return this.ticketsService.getAreas();
   }
+
+  @Get('getAllTickets')
+  @UseGuards(AuthGuard)
+  getAllTickets() {
+    return this.ticketsService.getAllTickets();
+  }
 }

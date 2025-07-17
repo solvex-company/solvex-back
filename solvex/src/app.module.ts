@@ -26,12 +26,14 @@ import { PlansSeeder } from './seeders/plans.seeder';
 import { Plan } from './payments/entities/entity.plan';
 import { Payment } from './payments/entities/entity.payment';
 import { Subscription } from './payments/entities/entity.subscription';
+import Oauth2Config from './config/OAuth2.config';
+import { FileUpload } from './file-upload/entities/file-upload.entity';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [typeOrmConfig],
+      load: [typeOrmConfig, Oauth2Config],
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],

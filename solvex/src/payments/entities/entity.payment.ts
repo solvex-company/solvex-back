@@ -1,8 +1,17 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Subscription } from './entity.subscription';
 
 @Entity({ name: 'payments' })
 export class Payment {
+  @PrimaryGeneratedColumn({ type: 'int' })
+  id_payment: number;
+
   @OneToOne(() => Subscription, (subscription) => subscription.payments)
   @JoinColumn({ name: 'id_subscription' })
   id_subscription: Subscription;

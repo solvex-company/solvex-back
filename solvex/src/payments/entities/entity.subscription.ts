@@ -6,12 +6,16 @@ import {
   ManyToOne,
   OneToMany,
   OneToOne,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Plan } from './entity.plan';
 import { Payment } from './entity.payment';
 
 @Entity({ name: 'subscription' })
 export class Subscription {
+  @PrimaryGeneratedColumn({ type: 'int' })
+  id_subscription: number;
+
   @OneToOne(() => User, (user) => user.subscriptions)
   @JoinColumn({ name: 'id_admin' })
   id_admin: User;

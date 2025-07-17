@@ -23,6 +23,9 @@ import { TicketStatusSeeder } from './seeders/statusTickets.seeder';
 import { TicketStatus } from './tickets/entities/statusTickets.entity';
 import { PaymentsModule } from './payments/payments.module';
 import { PlansSeeder } from './seeders/plans.seeder';
+import { Plan } from './payments/entities/entity.plan';
+import { Payment } from './payments/entities/entity.payment';
+import { Subscription } from './payments/entities/entity.subscription';
 
 @Module({
   imports: [
@@ -35,7 +38,16 @@ import { PlansSeeder } from './seeders/plans.seeder';
       useFactory: (configService: ConfigService) =>
         configService.get('typeorm')!,
     }),
-    TypeOrmModule.forFeature([Roles, TypeId, User, Credentials, TicketStatus]),
+    TypeOrmModule.forFeature([
+      Roles,
+      TypeId,
+      User,
+      Credentials,
+      TicketStatus,
+      Plan,
+      Payment,
+      Subscription,
+    ]),
     UsersModule,
     AuthModule,
     JwtModule.register({
@@ -44,11 +56,16 @@ import { PlansSeeder } from './seeders/plans.seeder';
       secret: process.env.JWT_SECRET,
     }),
     TicketsModule,
-  
     PaymentsModule,
   ],
   controllers: [],
-  providers: [RoleSeeder, TypeIdSeeder, UserSeeder, TicketStatusSeeder],
+  providers: [
+    RoleSeeder,
+    TypeIdSeeder,
+    UserSeeder,
+    TicketStatusSeeder,
+    PlansSeeder,
+  ],
 })
 export class AppModule implements OnApplicationBootstrap, NestModule {
   constructor(

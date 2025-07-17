@@ -21,13 +21,13 @@ export class User {
   @Column({ type: 'varchar', length: 50, nullable: false })
   lastname: string;
 
-  @Column({ type: 'varchar', length: 30, unique: true })
-  identification_number: string;
+  @Column({ type: 'varchar', length: 30, unique: true, nullable: true })
+  identification_number: string | null;
 
-  @Column({ type: 'varchar', length: 20 })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   phone: string;
 
-  @ManyToOne(() => TypeId, (type) => type.users)
+  @ManyToOne(() => TypeId, (type) => type.users, { nullable: true })
   @JoinColumn({ name: 'id_typeid' })
   typeId: TypeId;
 

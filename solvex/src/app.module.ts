@@ -44,6 +44,7 @@ import { PlansSeeder } from './seeders/plans.seeder';
       secret: process.env.JWT_SECRET,
     }),
     TicketsModule,
+  
     PaymentsModule,
   ],
   controllers: [],

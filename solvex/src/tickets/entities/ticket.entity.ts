@@ -22,8 +22,8 @@ export class Ticket {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   creation_date: Date;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  closing_date: Date;
+  @Column({ type: 'timestamp', nullable: true, default: null })
+  closing_date: Date | null;
 
   @Column({ type: 'varchar', default: 'no image' })
   img_1: string;
@@ -34,7 +34,6 @@ export class Ticket {
   @Column({ type: 'varchar', default: 'no image' })
   img_3: string;
 
-  @Column({ default: 1 })
   @ManyToOne(() => TicketStatus, (status) => status.id_status)
   @JoinColumn({ name: 'id_status' })
   id_status: TicketStatus;

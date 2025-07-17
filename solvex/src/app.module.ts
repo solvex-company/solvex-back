@@ -23,6 +23,9 @@ import { TicketStatusSeeder } from './seeders/statusTickets.seeder';
 import { TicketStatus } from './tickets/entities/statusTickets.entity';
 import Oauth2Config from './config/OAuth2.config';
 import { FileUpload } from './file-upload/entities/file-upload.entity';
+import { AreaSeeder } from './seeders/areas.seeder';
+import { Area } from './tickets/entities/areas.entity';
+
 
 @Module({
   imports: [
@@ -35,7 +38,14 @@ import { FileUpload } from './file-upload/entities/file-upload.entity';
       useFactory: (configService: ConfigService) =>
         configService.get('typeorm')!,
     }),
-    TypeOrmModule.forFeature([Roles, TypeId, User, Credentials, TicketStatus]),
+    TypeOrmModule.forFeature([
+      Roles,
+      TypeId,
+      User,
+      Credentials,
+      TicketStatus,
+      Area,
+    ]),
     UsersModule,
     AuthModule,
     JwtModule.register({
@@ -44,10 +54,15 @@ import { FileUpload } from './file-upload/entities/file-upload.entity';
       secret: process.env.JWT_SECRET,
     }),
     TicketsModule,
-    FileUpload,
   ],
   controllers: [],
-  providers: [RoleSeeder, TypeIdSeeder, UserSeeder, TicketStatusSeeder],
+  providers: [
+    RoleSeeder,
+    TypeIdSeeder,
+    UserSeeder,
+    TicketStatusSeeder,
+    AreaSeeder,
+  ],
 })
 export class AppModule implements OnApplicationBootstrap, NestModule {
   constructor(
@@ -55,6 +70,7 @@ export class AppModule implements OnApplicationBootstrap, NestModule {
     private readonly typeIdSeeder: TypeIdSeeder,
     private readonly userSeeder: UserSeeder,
     private readonly ticketStatusSeeder: TicketStatusSeeder,
+    private readonly AreaSeeder: AreaSeeder,
   ) {}
 
   configure(consumer: MiddlewareConsumer) {
@@ -64,7 +80,8 @@ export class AppModule implements OnApplicationBootstrap, NestModule {
   async onApplicationBootstrap() {
     await this.roleSeeder.seed();
     await this.typeIdSeeder.seed();
-    await this.userSeeder.seed();
+    await this.AreaSeeder.seed();
     await this.ticketStatusSeeder.seed();
+    await this.userSeeder.seed();
   }
 }

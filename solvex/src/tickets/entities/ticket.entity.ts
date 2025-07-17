@@ -4,9 +4,12 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { TicketStatus } from './statusTickets.entity';
+import { Area } from './areas.entity';
+import { ResolutionTicket } from './resolutionsTicket';
 
 @Entity({ name: 'tickets' })
 export class Ticket {
@@ -45,4 +48,11 @@ export class Ticket {
   @ManyToOne(() => User, (user) => user.id_user)
   @JoinColumn({ name: 'id_helper' })
   id_helper: User;
+
+  @ManyToOne(() => Area, (area) => area.tickets)
+  @JoinColumn({ name: 'id_area' })
+  area: Area;
+
+  @OneToMany(() => ResolutionTicket, (resolution) => resolution.ticket)
+  resolutions: ResolutionTicket[];
 }

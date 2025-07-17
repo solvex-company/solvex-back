@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { FileUploadService } from './file-upload.service';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 
 @Controller('file-upload')
 export class FileUploadController {
@@ -18,6 +19,23 @@ export class FileUploadController {
 
   @Post('upload')
   @UseInterceptors(FilesInterceptor('files', 3))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Subir 3 archivos como un array en el campo "files"',
+    schema: {
+      type: 'object',
+      properties: {
+        files: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+      required: ['files'],
+    },
+  })
   async uploadFiles(
     @UploadedFiles(
       new ParseFilePipe({

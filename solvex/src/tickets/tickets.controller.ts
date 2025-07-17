@@ -7,6 +7,7 @@ import {
   Body,
   UseGuards,
   Request,
+  Get,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { TicketsService } from '../tickets/tickets.service';
@@ -34,5 +35,11 @@ export class TicketsController {
       },
       files,
     );
+  }
+
+  @Get('getAreas')
+  @UseGuards(AuthGuard)
+  getAreas() {
+    return this.ticketsService.getAreas();
   }
 }

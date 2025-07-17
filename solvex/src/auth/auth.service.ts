@@ -15,6 +15,8 @@ import * as bcrypt from 'bcrypt';
 import { UserResponseDto } from 'src/users/dto/userResponse.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { GoogleProfile } from './interfaces/google-profile.interface';
 
 @Injectable()
 export class AuthService {
@@ -115,7 +117,7 @@ export class AuthService {
     return token;
   }
 
-  async validateUser(userData) {
+  async validateUser(userData: GoogleProfile) {
     console.log('Validate User');
     console.log(userData);
 
@@ -140,8 +142,8 @@ export class AuthService {
       name: userData.displayName,
       lastname: userData.familyName,
       identification_number: null,
-      phone: '',
-      role: { id_role: userData.role ?? 3 },
+      phone: null,
+      role: { id_role: 3 },
     });
 
     const savedUser = await this.usersRepository.save(newUser);
@@ -155,13 +157,13 @@ export class AuthService {
     await this.credentialsRepository.save(credentials);
 
     return {
-      id: savedUser.id_user,
+      id_user: savedUser.id_user,
       email: credentials.email,
       id_role: savedUser.role.id_role,
     };
   }
 
-  createJwtToken(payload) {
+  createJwtToken(payload: JwtPayload) {
     const token = this.jwtService.sign(payload);
     return token;
   }

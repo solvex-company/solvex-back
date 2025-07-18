@@ -15,7 +15,9 @@ export class UsersService {
 
   ////inicio prueba auth
   getUsers() {
-    return this.usersRepository.find();
+    return this.usersRepository.find({
+      relations: ['role'],
+    });
   }
   ///// fin prueba auth
 

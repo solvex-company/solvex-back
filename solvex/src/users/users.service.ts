@@ -16,7 +16,7 @@ export class UsersService {
   ////inicio prueba auth
   getUsers() {
     return this.usersRepository.find({
-      relations: ['role'],
+      relations: ['role', 'credentials'],
     });
   }
   ///// fin prueba auth
@@ -33,7 +33,7 @@ export class UsersService {
   async changeRolUser(id: string): Promise<User> {
     const userFound: User | null = await this.usersRepository.findOne({
       where: { id_user: id },
-      relations: ['role'],
+      relations: ['role', 'credentials'],
     });
 
     if (!userFound) throw new NotFoundException('user not found');
@@ -51,5 +51,29 @@ export class UsersService {
     await this.usersRepository.save(userFound);
 
     return userFound;
+  }
+
+  async getEnployees(): Promise<User[]> {
+    const users: User[] | null = await this.usersRepository.find({
+      relations: ['role', 'credentials'],
+    });
+
+    if (!users) throw new NotFoundException('users not found');
+
+    const employees = users.filter((user) => user.role.id_role === 3);
+
+    return employees;
+  }
+
+  async getHelpers(): Promise<User[]> {
+    const users: User[] | null = await this.usersRepository.find({
+      relations: ['role', 'credentials'],
+    });
+
+    if (!users) throw new NotFoundException('users not found');
+
+    const helpers = users.filter((user) => user.role.id_role === 2);
+
+    return helpers;
   }
 }

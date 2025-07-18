@@ -24,6 +24,22 @@ export class UsersController {
   ///// fin prueba auth
 
   @ApiBearerAuth()
+  @Get('employees')
+  @Roles(Role.ADMIN)
+  @UseGuards(AuthGuard, RolesGuard)
+  getEnployees() {
+    return this.usersService.getEnployees();
+  }
+
+  @ApiBearerAuth()
+  @Get('helpers')
+  @Roles(Role.ADMIN)
+  @UseGuards(AuthGuard, RolesGuard)
+  getHelpers() {
+    return this.usersService.getHelpers();
+  }
+
+  @ApiBearerAuth()
   @Get('admin/:id')
   @Roles(Role.ADMIN)
   @UseGuards(AuthGuard, RolesGuard)

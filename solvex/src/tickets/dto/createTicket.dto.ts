@@ -19,14 +19,6 @@ export class createTicketDto {
   description: string;
 
   @ApiProperty({
-    description: 'id empleado',
-    example: '123',
-  })
-  @IsNotEmpty()
-  @IsString()
-  id_empleado: string;
-
-  @ApiProperty({
     description: 'id del area',
     example: '1',
   })

@@ -25,7 +25,6 @@ import Oauth2Config from './config/OAuth2.config';
 import { AreaSeeder } from './seeders/areas.seeder';
 import { Area } from './tickets/entities/areas.entity';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({

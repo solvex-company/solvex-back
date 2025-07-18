@@ -35,6 +35,14 @@ Para autenticacion de google:
 - GOOGLE_CLIENT_SECRET='Aqui va el client secret de google'
 - GOOGLE_CALLBACK_URL='Aqui va el callback URL'
 
+Para cloudinary:
+
+Recordar iniciar sesion con la cuenta de solvex:
+
+- CLOUDINARY_CLOUD_NAME='Nombre de la nube en cloudinary'
+- CLOUDINARY_API_KEY='Api key que se encuentra en cloudinary'
+- CLOUDINARY_API_SECRET='Esta es la key secreta que se encuentra en clodinary'
+
 - Importante: Crear .env.development al nivel de la carpeta principal solvex y crear primero la base de datos en postgres
 
 ### Ejemplo consumo de ruta register

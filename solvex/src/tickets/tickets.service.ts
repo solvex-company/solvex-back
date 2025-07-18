@@ -34,6 +34,7 @@ export class TicketsService {
 
   async createTicket(
     createTicketData: createTicketDto,
+    user: any,
     files?: Express.Multer.File[],
   ): Promise<Ticket> {
     try {
@@ -41,14 +42,14 @@ export class TicketsService {
         throw new BadRequestException('Title and description are required');
       }
 
+      console.log(`controller ${user.id}`);
+
       const userFound = await this.userRepository.findOne({
-        where: { id_user: createTicketData.id_empleado },
+        where: { id_user: user.id },
       });
 
       if (!userFound) {
-        throw new NotFoundException(
-          `User with ID ${createTicketData.id_empleado} not found`,
-        );
+        throw new NotFoundException(`User with ID ${user.id} not found`);
       }
 
       const defaultStatus = await this.statusRepository.findOne({
@@ -97,6 +98,7 @@ export class TicketsService {
           area: areaFound,
           creation_date: new Date(),
         });
+        this.logger.log(`ID EMPLEADO: ${user.id}`);
 
         const savedTicket = await this.ticketRepository.save(newTicket);
         this.logger.log(
@@ -126,9 +128,11 @@ export class TicketsService {
         error instanceof NotFoundException ||
         error instanceof BadRequestException
       ) {
+        this.logger.log(`ID EMPLEADO: ${user.id}`);
         throw error;
       }
 
+      this.logger.log(`ID EMPLEADO: ${user.id}`);
       throw new InternalServerErrorException('Failed to create ticket');
     }
   }

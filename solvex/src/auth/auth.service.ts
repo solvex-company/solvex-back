@@ -47,12 +47,14 @@ export class AuthService {
       throw new ConflictException('the identification number already exist');
     }
 
+    const typeIdNumber = parseInt(userData.typeId, 10);
+
     const user: User = this.usersRepository.create({
       name: userData.name,
       lastname: userData.lastname,
-      identification_number: userData.identification_number,
+      identification_number: userData.identification_number.toString(),
       phone: userData.phone.toString(),
-      typeId: { id_typeid: userData.typeId },
+      typeId: { id_typeid: typeIdNumber },
       role: { id_role: 3 },
     });
 

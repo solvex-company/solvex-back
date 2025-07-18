@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Controller,
   Post,
@@ -7,15 +11,15 @@ import {
   Req,
   UnauthorizedException,
   Res,
+  BadRequestException,
 } from '@nestjs/common';
-import { CreateUserDto, loginDto } from 'src/users/dto/user.dto';
+import { loginDto } from 'src/users/dto/user.dto';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './utils/GoogleAuthGuard';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { JwtRequest } from './interfaces/jwt-request.interface';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
-import { auth } from 'express-openid-connect';
 import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')
@@ -27,9 +31,20 @@ export class AuthController {
   ) {}
 
   @Post('signup')
-  create(@Body() userData: CreateUserDto) {
+  create(@Body() userData: any) {
     console.log(userData);
-    return this.authService.create(userData);
+    const transformedData = {
+      ...userData,
+      typeId: parseInt(userData.typeId, 10),
+      identification_number: userData.identification_number.toString(),
+      phone: userData.phone.toString(),
+    };
+    if (isNaN(transformedData.typeId)) {
+      throw new BadRequestException('typeId must be a valid number');
+    }
+
+    console.log(transformedData);
+    return this.authService.create(transformedData);
   }
 
   @Post('signin')

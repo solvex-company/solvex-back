@@ -2,7 +2,7 @@ import { ApiProperty, PickType } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
-  IsNumber,
+  IsNumberString,
   IsString,
   Matches,
   MaxLength,
@@ -70,6 +70,7 @@ export class CreateUserDto {
     description: 'identification num of the user',
     example: '123456789',
   })
+  @IsNotEmpty()
   identification_number: string;
 
   @ApiProperty({
@@ -77,7 +78,6 @@ export class CreateUserDto {
     example: '1234567890',
   })
   @IsNotEmpty()
-  @IsString()
   @Matches(/^[0-9]+$/)
   phone: string;
 
@@ -86,8 +86,8 @@ export class CreateUserDto {
     example: '1',
   })
   @IsNotEmpty()
-  @IsNumber()
-  typeId: number;
+  @IsNumberString()
+  typeId: string;
 }
 
 export class loginDto extends PickType(CreateUserDto, ['email', 'password']) {}

@@ -53,7 +53,7 @@ export class AuthService {
       identification_number: userData.identification_number,
       phone: userData.phone.toString(),
       typeId: { id_typeid: userData.typeId },
-      role: { id_role: userData.role ?? 3 },
+      role: { id_role: 3 },
     });
 
     const savedUser = await this.usersRepository.save(user);
@@ -105,7 +105,7 @@ export class AuthService {
     if (!passwordMatch) throw new BadRequestException('Incorrect credentials');
 
     const payload = {
-      id: findUser.id_credentials,
+      id: findUser.user.id_user,
       email: findUser.email,
       id_role: findUser.user.role.id_role,
       name: findUser.user.name,

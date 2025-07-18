@@ -88,23 +88,6 @@ export class CreateUserDto {
   @IsNotEmpty()
   @IsNumber()
   typeId: number;
-
-  @ApiProperty({
-    description: 'user id credentials',
-    example: '1',
-  })
-  @IsNotEmpty()
-  @IsNumber()
-  credentials: number;
-
-  @ApiProperty({
-    required: false,
-    default: 3,
-    description: 'user id role (default is 3)',
-    example: '1',
-  })
-  @IsNumber()
-  role?: number;
 }
 
 export class loginDto extends PickType(CreateUserDto, ['email', 'password']) {}

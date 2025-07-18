@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Controller,
@@ -6,8 +8,9 @@ import {
   UseInterceptors,
   Body,
   UseGuards,
-  Request,
   Get,
+  UnauthorizedException,
+  Request,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { TicketsService } from '../tickets/tickets.service';
@@ -21,18 +24,20 @@ export class TicketsController {
   @Post('createTicket')
   @UseGuards(AuthGuard)
   @UseInterceptors(FilesInterceptor('images', 3))
-  async createWithImages(
-    @Request() req: { user: { sub: string } },
+  async createTicket(
+    @Request() req: any,
     @Body() createTicketData: createTicketDto,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    const id_empleado = req.user.sub;
+    if (!req.user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
 
     return this.ticketsService.createTicket(
       {
         ...createTicketData,
-        id_empleado,
       },
+      req.user,
       files,
     );
   }

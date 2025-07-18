@@ -6,6 +6,7 @@ import {
   UseGuards,
   Req,
   UnauthorizedException,
+  Res,
 } from '@nestjs/common';
 import { CreateUserDto, loginDto } from 'src/users/dto/user.dto';
 import { AuthService } from './auth.service';
@@ -13,11 +14,17 @@ import { GoogleAuthGuard } from './utils/GoogleAuthGuard';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { JwtRequest } from './interfaces/jwt-request.interface';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
+import { auth } from 'express-openid-connect';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')
 @ApiTags('Authentication')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post('signup')
   create(@Body() userData: CreateUserDto) {
@@ -55,7 +62,7 @@ export class AuthController {
       example: 'your-jwt-token',
     },
   })
-  handleRedirect(@Req() req: JwtRequest): string {
+  handleRedirect(@Req() req: JwtRequest, @Res() res: Response) {
     try {
       if (!req.user) {
         throw new UnauthorizedException(
@@ -67,7 +74,9 @@ export class AuthController {
 
       const token = this.authService.createJwtToken(payload);
 
-      return token;
+      return res.redirect(
+        `${this.configService.get<string>('FRONTEND_URL')!}/auth/callback?token=${token}`,
+      );
     } catch (err) {
       console.error('Redirect handler error:', err);
       throw new UnauthorizedException('Google login failed');

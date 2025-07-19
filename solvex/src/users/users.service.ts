@@ -13,13 +13,13 @@ export class UsersService {
     private readonly rolesRepository: Repository<Roles>,
   ) {}
 
-  ////inicio prueba auth
-  getUsers() {
-    return this.usersRepository.find({
-      relations: ['role', 'credentials'],
+  async getOwnUserData(userId: string) {
+    const user = await this.usersRepository.findOne({
+      where: { id_user: userId },
     });
+    if (!user) throw new NotFoundException('User not found');
+    return user;
   }
-  ///// fin prueba auth
 
   async getUserById(userId: string): Promise<User> {
     const user = await this.usersRepository.findOne({

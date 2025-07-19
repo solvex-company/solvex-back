@@ -1,27 +1,43 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import { Controller, Get, Param, Put } from '@nestjs/common';
+import { Controller, Get, Param, Put, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Role } from 'src/roles.enum';
 import { Roles } from 'src/decorators/roles.decorators';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { JwtRequest } from 'src/auth/interfaces/jwt-request.interface';
+import { User } from './entities/user.entity';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  ////inicio prueba auth
   @ApiBearerAuth()
-  @Get()
-  @Roles(Role.ADMIN)
-  @UseGuards(AuthGuard, RolesGuard)
-  getUsers() {
-    return this.usersService.getUsers();
+  @Get('me')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Get own user data',
+    description: 'Gets user data from logged user.',
+  })
+  @ApiResponse({
+    description: 'Returns user data',
+    schema: {
+      example: {
+        id_user: '123e4567-e89b-12d3-a456-426614174000',
+        name: 'Ana',
+        lastname: 'Ramírez',
+        identification_number: '987654321',
+        phone: '999888777',
+      },
+    },
+  })
+  getOwnUserData(@Req() req: JwtRequest): Promise<User> {
+    const userId: string = req.user.id;
+    return this.usersService.getOwnUserData(userId);
   }
-  ///// fin prueba auth
 
   @ApiBearerAuth()
   @Get('employees')

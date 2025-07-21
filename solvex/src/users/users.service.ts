@@ -1,20 +1,25 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
+import { Roles } from './entities/Roles.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    @InjectRepository(Roles)
+    private readonly rolesRepository: Repository<Roles>,
   ) {}
 
-  ////inicio prueba auth
-  getUsers() {
-    return this.usersRepository.find();
+  async getOwnUserData(userId: string) {
+    const user = await this.usersRepository.findOne({
+      where: { id_user: userId },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    return user;
   }
-  ///// fin prueba auth
 
   async getUserById(userId: string): Promise<User> {
     const user = await this.usersRepository.findOne({
@@ -23,5 +28,52 @@ export class UsersService {
     });
     if (!user) throw new Error('User not found');
     return user;
+  }
+
+  async changeRolUser(id: string): Promise<User> {
+    const userFound: User | null = await this.usersRepository.findOne({
+      where: { id_user: id },
+      relations: ['role', 'credentials'],
+    });
+
+    if (!userFound) throw new NotFoundException('user not found');
+
+    const roleId = userFound.role.id_role === 3 ? 2 : 3;
+
+    const newRole: Roles | null = await this.rolesRepository.findOne({
+      where: { id_role: roleId },
+    });
+
+    if (!newRole) throw new NotFoundException('role not found');
+
+    userFound.role = newRole;
+
+    await this.usersRepository.save(userFound);
+
+    return userFound;
+  }
+
+  async getEnployees(): Promise<User[]> {
+    const users: User[] | null = await this.usersRepository.find({
+      relations: ['role', 'credentials'],
+    });
+
+    if (!users) throw new NotFoundException('users not found');
+
+    const employees = users.filter((user) => user.role.id_role === 3);
+
+    return employees;
+  }
+
+  async getHelpers(): Promise<User[]> {
+    const users: User[] | null = await this.usersRepository.find({
+      relations: ['role', 'credentials'],
+    });
+
+    if (!users) throw new NotFoundException('users not found');
+
+    const helpers = users.filter((user) => user.role.id_role === 2);
+
+    return helpers;
   }
 }

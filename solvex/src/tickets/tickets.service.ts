@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-// tickets.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket } from './entities/ticket.entity';
@@ -9,9 +14,12 @@ import { User } from '../users/entities/user.entity';
 import { TicketStatus } from './entities/statusTickets.entity';
 import { FileUploadService } from '../file-upload/file-upload.service';
 import { createTicketDto } from './dto/createTicket.dto';
+import { Area } from './entities/areas.entity';
 
 @Injectable()
 export class TicketsService {
+  private readonly logger = new Logger(TicketsService.name);
+
   constructor(
     @InjectRepository(Ticket)
     private readonly ticketRepository: Repository<Ticket>,
@@ -19,40 +27,157 @@ export class TicketsService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(TicketStatus)
     private readonly statusRepository: Repository<TicketStatus>,
+    @InjectRepository(Area)
+    private readonly areaRepository: Repository<Area>,
     private readonly fileUploadService: FileUploadService,
   ) {}
 
   async createTicket(
     createTicketData: createTicketDto,
+    user: any,
     files?: Express.Multer.File[],
   ): Promise<Ticket> {
-    const userFound = await this.userRepository.findOne({
-      where: { id_user: createTicketData.id_empleado },
-    });
+    try {
+      if (!createTicketData.title || !createTicketData.description) {
+        throw new BadRequestException('Title and description are required');
+      }
 
-    if (!userFound) throw new NotFoundException('Empleado no encontrado');
+      console.log(`controller ${user.id}`);
 
-    const defaultStatus = await this.statusRepository.findOne({
-      where: { id_status: 1 },
-    });
+      const userFound = await this.userRepository.findOne({
+        where: { id_user: user.id },
+      });
 
-    if (!defaultStatus) throw new NotFoundException('status not found');
+      if (!userFound) {
+        throw new NotFoundException(`User with ID ${user.id} not found`);
+      }
 
-    const imageUrls = files
-      ? await this.fileUploadService.uploadImages(files)
-      : ['no image', 'no image', 'no image'];
+      const defaultStatus = await this.statusRepository.findOne({
+        where: { id_status: 1 },
+      });
 
-    const newTicket = this.ticketRepository.create({
-      title: createTicketData.title,
-      description: createTicketData.description,
-      img_1: imageUrls[0],
-      img_2: imageUrls[1],
-      img_3: imageUrls[2],
-      id_empleado: userFound,
-      id_status: defaultStatus,
-      creation_date: new Date(),
-    });
+      if (!defaultStatus) {
+        throw new NotFoundException('Default ticket status not configured');
+      }
 
-    return this.ticketRepository.save(newTicket);
+      const areaFound = await this.areaRepository.findOne({
+        where: { id_area: createTicketData.id_area },
+      });
+
+      this.logger.debug(`Buscando área con ID: ${createTicketData.id_area}`);
+      this.logger.debug(`Área encontrada: ${JSON.stringify(areaFound)}`);
+
+      if (!areaFound) {
+        throw new NotFoundException(
+          `Area with ID ${createTicketData.id_area} not found`,
+        );
+      }
+
+      let imageUrls = ['no image', 'no image', 'no image'];
+
+      if (files && files.length > 0) {
+        try {
+          imageUrls = await this.fileUploadService.uploadImages(files);
+        } catch (uploadError) {
+          this.logger.error('Failed to upload images', uploadError.stack);
+          throw new InternalServerErrorException(
+            'Failed to upload ticket images',
+          );
+        }
+      }
+
+      try {
+        const newTicket = this.ticketRepository.create({
+          title: createTicketData.title,
+          description: createTicketData.description,
+          img_1: imageUrls[0],
+          img_2: imageUrls[1],
+          img_3: imageUrls[2],
+          id_empleado: userFound,
+          id_status: defaultStatus,
+          area: areaFound,
+          creation_date: new Date(),
+        });
+        this.logger.log(`ID EMPLEADO: ${user.id}`);
+
+        const savedTicket = await this.ticketRepository.save(newTicket);
+        this.logger.log(
+          `Ticket created successfully for area ${areaFound.name} by user ${userFound.id_user}`,
+        );
+
+        const foundTicket = await this.ticketRepository.findOne({
+          where: { id_ticket: savedTicket.id_ticket },
+          relations: ['id_empleado', 'id_status', 'area'],
+        });
+
+        if (!foundTicket) {
+          throw new NotFoundException('Created ticket not found');
+        }
+
+        return foundTicket;
+      } catch (dbError) {
+        this.logger.error('Database error creating ticket', dbError.stack);
+        throw new InternalServerErrorException(
+          'Failed to create ticket in database',
+        );
+      }
+    } catch (error) {
+      this.logger.error(`Error in createTicket: ${error.message}`, error.stack);
+
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        this.logger.log(`ID EMPLEADO: ${user.id}`);
+        throw error;
+      }
+
+      this.logger.log(`ID EMPLEADO: ${user.id}`);
+      throw new InternalServerErrorException('Failed to create ticket');
+    }
+  }
+
+  async getAreas(): Promise<Area[]> {
+    try {
+      this.logger.log('Fetching all areas from database');
+      const areas = await this.areaRepository.find({
+        select: ['id_area', 'name'],
+        order: { id_area: 'ASC' },
+      });
+
+      if (!areas || areas.length === 0) {
+        this.logger.warn('No areas found in database');
+        return [];
+      }
+
+      return areas;
+    } catch (error) {
+      this.logger.error('Failed to fetch areas', error.stack);
+      throw new InternalServerErrorException('Could not retrieve areas');
+    }
+  }
+
+  async getAllTickets(): Promise<Ticket[]> {
+    try {
+      this.logger.log('Fetching all tickets from database');
+
+      const tickets = await this.ticketRepository.find({
+        relations: ['id_empleado', 'id_status', 'area'],
+        order: {
+          creation_date: 'DESC',
+        },
+      });
+
+      if (!tickets || tickets.length === 0) {
+        this.logger.warn('No tickets found in database');
+        return [];
+      }
+
+      this.logger.log(`Found ${tickets.length} tickets`);
+      return tickets;
+    } catch (error) {
+      this.logger.error('Failed to fetch tickets', error.stack);
+      throw new InternalServerErrorException('Could not retrieve tickets');
+    }
   }
 }

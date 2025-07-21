@@ -29,9 +29,9 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
       if (!email) throw new BadRequestException('Google account has no email');
 
       const user = await this.authService.validateUser({
-        email: profile.emails?.[0]?.value,
-        displayName: profile.name?.givenName,
-        familyName: profile.name?.familyName,
+        email,
+        displayName: profile.name?.givenName || 'noNameProvidedByGoogle',
+        familyName: profile.name?.familyName || 'noLastNameProvidedByGoogle',
       });
 
       if (!user) {

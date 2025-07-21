@@ -27,7 +27,8 @@ import { Plan } from './payments/entities/entity.plan';
 import { Payment } from './payments/entities/entity.payment';
 import { Subscription } from './payments/entities/entity.subscription';
 import Oauth2Config from './config/OAuth2.config';
-import { FileUpload } from './file-upload/entities/file-upload.entity';
+import { AreaSeeder } from './seeders/areas.seeder';
+import { Area } from './tickets/entities/areas.entity';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { FileUpload } from './file-upload/entities/file-upload.entity';
       Plan,
       Payment,
       Subscription,
+      Area,
     ]),
     UsersModule,
     AuthModule,
@@ -67,6 +69,7 @@ import { FileUpload } from './file-upload/entities/file-upload.entity';
     UserSeeder,
     TicketStatusSeeder,
     PlansSeeder,
+    AreaSeeder,
   ],
 })
 export class AppModule implements OnApplicationBootstrap, NestModule {
@@ -76,6 +79,7 @@ export class AppModule implements OnApplicationBootstrap, NestModule {
     private readonly userSeeder: UserSeeder,
     private readonly ticketStatusSeeder: TicketStatusSeeder,
     private readonly plansSeeder: PlansSeeder,
+    private readonly AreaSeeder: AreaSeeder,
   ) {}
 
   configure(consumer: MiddlewareConsumer) {
@@ -85,8 +89,9 @@ export class AppModule implements OnApplicationBootstrap, NestModule {
   async onApplicationBootstrap() {
     await this.roleSeeder.seed();
     await this.typeIdSeeder.seed();
-    await this.userSeeder.seed();
+    await this.AreaSeeder.seed();
     await this.ticketStatusSeeder.seed();
     await this.plansSeeder.seed();
+    await this.userSeeder.seed();
   }
 }

@@ -15,6 +15,8 @@ import * as bcrypt from 'bcrypt';
 import { UserResponseDto } from 'src/users/dto/userResponse.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { GoogleProfile } from './interfaces/google-profile.interface';
 
 @Injectable()
 export class AuthService {
@@ -45,13 +47,15 @@ export class AuthService {
       throw new ConflictException('the identification number already exist');
     }
 
+    const typeIdNumber = parseInt(userData.typeId, 10);
+
     const user: User = this.usersRepository.create({
       name: userData.name,
       lastname: userData.lastname,
-      identification_number: userData.identification_number,
+      identification_number: userData.identification_number.toString(),
       phone: userData.phone.toString(),
-      typeId: { id_typeid: userData.typeId },
-      role: { id_role: userData.role ?? 3 },
+      typeId: { id_typeid: typeIdNumber },
+      role: { id_role: 3 },
     });
 
     const savedUser = await this.usersRepository.save(user);
@@ -103,7 +107,7 @@ export class AuthService {
     if (!passwordMatch) throw new BadRequestException('Incorrect credentials');
 
     const payload = {
-      id: findUser.id_credentials,
+      id: findUser.user.id_user,
       email: findUser.email,
       id_role: findUser.user.role.id_role,
       name: findUser.user.name,
@@ -115,7 +119,7 @@ export class AuthService {
     return token;
   }
 
-  async validateUser(userData) {
+  async validateUser(userData: GoogleProfile) {
     console.log('Validate User');
     console.log(userData);
 
@@ -140,8 +144,8 @@ export class AuthService {
       name: userData.displayName,
       lastname: userData.familyName,
       identification_number: null,
-      phone: '',
-      role: { id_role: userData.role ?? 3 },
+      phone: null,
+      role: { id_role: 3 },
     });
 
     const savedUser = await this.usersRepository.save(newUser);
@@ -155,13 +159,13 @@ export class AuthService {
     await this.credentialsRepository.save(credentials);
 
     return {
-      id: savedUser.id_user,
+      id_user: savedUser.id_user,
       email: credentials.email,
       id_role: savedUser.role.id_role,
     };
   }
 
-  createJwtToken(payload) {
+  createJwtToken(payload: JwtPayload) {
     const token = this.jwtService.sign(payload);
     return token;
   }

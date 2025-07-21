@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Controller,
   Post,
@@ -6,18 +10,41 @@ import {
   UseGuards,
   Req,
   UnauthorizedException,
+  Res,
+  BadRequestException,
 } from '@nestjs/common';
-import { CreateUserDto, loginDto } from 'src/users/dto/user.dto';
+import { loginDto } from 'src/users/dto/user.dto';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './utils/GoogleAuthGuard';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { JwtRequest } from './interfaces/jwt-request.interface';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')
+@ApiTags('Authentication')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post('signup')
-  create(@Body() userData: CreateUserDto) {
-    return this.authService.create(userData);
+  create(@Body() userData: any) {
+    console.log(userData);
+    const transformedData = {
+      ...userData,
+      typeId: parseInt(userData.typeId, 10),
+      identification_number: userData.identification_number.toString(),
+      phone: userData.phone.toString(),
+    };
+    if (isNaN(transformedData.typeId)) {
+      throw new BadRequestException('typeId must be a valid number');
+    }
+
+    console.log(transformedData);
+    return this.authService.create(transformedData);
   }
 
   @Post('signin')
@@ -27,23 +54,44 @@ export class AuthController {
 
   @Get('google/login')
   @UseGuards(GoogleAuthGuard)
-  handleLogin() {}
+  @ApiOperation({
+    summary: 'Google OAuth Login',
+    description: 'Redirects to Google for authentication.',
+  })
+  @ApiResponse({
+    status: 204,
+  })
+  googleLogin(): void {
+    // Empty on purpose – just triggers the guard
+  }
 
   @Get('google/redirect')
   @UseGuards(GoogleAuthGuard)
-  handleRedirect(@Req() req) {
+  @ApiOperation({
+    summary: 'Google OAuth Redirect',
+    description: 'Handles the Google login callback and returns a JWT token.',
+  })
+  @ApiResponse({
+    description: 'Returns JWT token',
+    schema: {
+      example: 'your-jwt-token',
+    },
+  })
+  handleRedirect(@Req() req: JwtRequest, @Res() res: Response) {
     try {
       if (!req.user) {
         throw new UnauthorizedException(
-          'No user user found after Google login',
+          'No user found in request after Google login',
         );
       }
 
-      const payload = req.user;
+      const payload: JwtPayload = req.user;
 
       const token = this.authService.createJwtToken(payload);
 
-      return token;
+      return res.redirect(
+        `${this.configService.get<string>('FRONTEND_URL')!}/auth/callback?token=${token}`,
+      );
     } catch (err) {
       console.error('Redirect handler error:', err);
       throw new UnauthorizedException('Google login failed');

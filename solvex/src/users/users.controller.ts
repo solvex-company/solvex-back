@@ -15,6 +15,13 @@ import { User } from './entities/user.entity';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Get()
+  @Roles(Role.ADMIN)
+  @UseGuards(AuthGuard, RolesGuard)
+  getUsers() {
+    return this.usersService.getUsers();
+  }
+
   @ApiBearerAuth()
   @Get('me')
   @UseGuards(AuthGuard)

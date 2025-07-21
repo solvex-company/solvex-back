@@ -13,6 +13,12 @@ export class UsersService {
     private readonly rolesRepository: Repository<Roles>,
   ) {}
 
+  async getUsers() {
+    return await this.usersRepository.find({
+      relations: ['role', 'credentials'],
+    });
+  }
+
   async getOwnUserData(userId: string) {
     const user = await this.usersRepository.findOne({
       where: { id_user: userId },

@@ -1,39 +1,38 @@
-import { /*Inject,*/ Injectable } from '@nestjs/common';
-// import { InjectRepository } from '@nestjs/typeorm';
-// import { Plan } from './entities/entity.plan';
-// import { Repository } from 'typeorm';
-// import { CreatePreferenceDto } from './dtos/createPreference.dto';
+import { Inject, Injectable } from '@nestjs/common';
+import { MercadoPagoConfig, Preference } from 'mercadopago';
 
 @Injectable()
 export class PaymentsService {
-  //   constructor(
-  //     @Inject('MERCADO_PAGO') private readonly mp,
-  //     @InjectRepository(Plan) private readonly planRepository: Repository<Plan>,
-  //   ) {}
-  //   async createCheckoutPreference(data: CreatePreferenceDto) {
-  //     const plan = await this.planRepository.findOne({
-  //       where: { id_plan: data.id_plan },
-  //     });
-  //     if (!plan) throw new Error('Plan not found');
-  //     const preference = {
-  //       items: [
-  //         {
-  //           title: plan.plan_name,
-  //           quantity: 1,
-  //           currency_id: 'ARS',
-  //           unit_price: plan.total_price,
-  //         },
-  //       ],
-  //       back_urls: {
-  //         success: 'http://localhost:4000/payments/success',
-  //         failure: 'http://localhost:4000/payments/failure',
-  //         pending: 'http://localhost:4000/payments/pending',
-  //       },
-  //       auto_return: 'approved',
-  //       external_reference: `solvex-${data.id_admin}-${plan.id_plan}`,
-  //       notification_url: 'http://localhost:4000/payments/notification',
-  //     };
-  //     const response = await this.mp.preferences.create(preference);
-  //     return response.body.init_point;
-  //   }
+  constructor(
+    @Inject('MERCADO_PAGO') private readonly mpClient: MercadoPagoConfig,
+  ) {}
+  async createPaymentPreference(
+    amount: number,
+    title: string,
+  ): Promise<string> {
+    const preference = {
+      items: [
+        {
+          id: 'item-1',
+          title: title,
+          quantity: 1,
+          currency_id: 'ARS',
+          unit_price: amount,
+        },
+      ],
+      back_urls: {
+        success: 'http://localhost:4000/success',
+      },
+      auto_return: 'approved',
+    };
+
+    const preferenceClient = new Preference(this.mpClient);
+    const response = await preferenceClient.create({ body: preference });
+    if (!response.init_point) {
+      throw new Error(
+        'Failed to create payment preference: init_point is undefined',
+      );
+    }
+    return response.init_point;
+  }
 }

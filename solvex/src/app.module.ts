@@ -35,6 +35,7 @@ import { Area } from './tickets/entities/areas.entity';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [typeOrmConfig, Oauth2Config],
+      envFilePath: ['.env', '.env.development'],
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],

@@ -184,6 +184,7 @@ export class TicketsService {
   async getTicketById(ticketId: number) {
     const ticketFound: Ticket | null = await this.ticketRepository.findOne({
       where: { id_ticket: ticketId },
+      relations: ['id_empleado', 'id_status'],
     });
 
     if (!ticketFound)

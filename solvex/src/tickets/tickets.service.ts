@@ -180,4 +180,43 @@ export class TicketsService {
       throw new InternalServerErrorException('Could not retrieve tickets');
     }
   }
+
+  async getTicketById(ticketId: number) {
+    const ticketFound: Ticket | null = await this.ticketRepository.findOne({
+      where: { id_ticket: ticketId },
+    });
+
+    if (!ticketFound)
+      throw new NotFoundException(`Ticket con id ${ticketId} no se encontró`);
+
+    return ticketFound;
+  }
+
+  async resolutionTicket(id_helper: string, ticketData: Ticket) {
+    const ticketFound: Ticket | null = await this.ticketRepository.findOne({
+      where: { id_ticket: ticketData.id_ticket },
+      relations: ['id_empleado'],
+    });
+
+    if (!ticketFound)
+      throw new NotFoundException(
+        `Ticket con id ${ticketData.id_ticket} no se encontró`,
+      );
+
+    const helperFound: User | null = await this.userRepository.findOne({
+      where: { id_user: id_helper },
+    });
+
+    if (!helperFound)
+      throw new NotFoundException(`Soporte con id ${id_helper} no se encontró`);
+
+    const employeeFound: User | null = await this.userRepository.findOneBy({
+      id_user: ticketData.id_empleado.id_user,
+    });
+
+    if (!employeeFound)
+      throw new NotFoundException(
+        `Empleado con id ${ticketData.id_empleado.id_user} no se encontró`,
+      );
+  }
 }

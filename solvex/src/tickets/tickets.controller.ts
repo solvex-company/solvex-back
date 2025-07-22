@@ -18,12 +18,7 @@ import { TicketsService } from '../tickets/tickets.service';
 import { createTicketDto } from './dto/createTicket.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Ticket } from './entities/ticket.entity';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiConsumes,
-  ApiExtraModels,
-} from '@nestjs/swagger';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { Role } from 'src/roles.enum';
 import { Roles } from 'src/decorators/roles.decorators';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -36,27 +31,6 @@ export class TicketsController {
   @Post('createTicket')
   @Roles(Role.EMPLOYEE)
   @UseGuards(AuthGuard, RolesGuard)
-  @ApiConsumes('multipart/form-data')
-  @ApiExtraModels(createTicketDto)
-  @ApiBody({
-    description: 'Subir archivos junto con datos del ticket',
-    schema: {
-      type: 'object',
-      properties: {
-        files: {
-          type: 'array',
-          items: {
-            type: 'string',
-            format: 'binary',
-          },
-        },
-        data: {
-          $ref: '#/components/schemas/createTicketDto',
-        },
-      },
-      required: ['data', 'files'],
-    },
-  })
   @UseInterceptors(FilesInterceptor('images', 3))
   async createTicket(
     @Request() req: any,

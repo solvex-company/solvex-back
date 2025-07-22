@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Ticket } from './ticket.entity';
 import { TicketStatus } from './statusTickets.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Entity({ name: 'resolutions_ticket' })
 export class ResolutionTicket {
@@ -17,10 +18,14 @@ export class ResolutionTicket {
   title: string;
 
   @Column({ type: 'text' })
-  observation: string;
-
-  @Column({ type: 'text' })
   description: string;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  data: Date;
+
+  @ManyToOne(() => User, (user) => user.id_user)
+  @JoinColumn({ name: 'id_helper' })
+  id_helper: User;
 
   @ManyToOne(() => Ticket, (ticket) => ticket.resolutions)
   @JoinColumn({ name: 'id_ticket' })

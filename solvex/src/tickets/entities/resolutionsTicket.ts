@@ -17,6 +17,9 @@ export class ResolutionTicket {
   title: string;
 
   @Column({ type: 'text' })
+  observation: string;
+
+  @Column({ type: 'text' })
   description: string;
 
   @ManyToOne(() => Ticket, (ticket) => ticket.resolutions)

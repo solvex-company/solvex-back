@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
@@ -6,6 +7,8 @@ import {
   InternalServerErrorException,
   BadRequestException,
   Logger,
+  HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -219,5 +222,70 @@ export class TicketsService {
       throw new NotFoundException(
         `Empleado con id ${ticketData.id_empleado.id_user} no se encontró`,
       );
+  }
+
+  async getTicketsReport() {
+    try {
+      const [statusCounts, supportEmployees] = await Promise.all([
+        this.getTicketsByStatus(),
+        this.getSupportEmployees(),
+      ]);
+
+      const totalIncidencias = statusCounts.reduce(
+        (total, item) => total + item.value,
+        0,
+      );
+
+      return {
+        incidenciasPorEstado: statusCounts,
+        empleadosSoporte: supportEmployees,
+        totalIncidencias,
+      };
+    } catch (error) {
+      console.error('Error en getTicketsReport:', error);
+      throw new HttpException(
+        'Error al generar el reporte',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  private async getTicketsByStatus() {
+    const statuses = await this.statusRepository.find();
+
+    return Promise.all(
+      statuses.map(async (status) => {
+        const count = await this.ticketRepository
+          .createQueryBuilder('ticket')
+          .where('ticket.id_status = :statusId', { statusId: status.id_status })
+          .getCount();
+
+        return {
+          name: this.getStatusName(status.id_status),
+          value: count,
+        };
+      }),
+    );
+  }
+
+  private getStatusName(id: number): string {
+    const statusMap = {
+      1: 'Pendientes',
+      2: 'En Progreso',
+      3: 'Completados',
+    };
+    return statusMap[id] || 'Desconocido';
+  }
+
+  private async getSupportEmployees() {
+    const users = await this.userRepository.find({
+      where: { role: { id_role: 2 } },
+      select: ['id_user', 'name', 'lastname'],
+    });
+
+    return users.map((user) => ({
+      id: user.id_user,
+      nombre: `${user.name} ${user.lastname}`,
+    }));
   }
 }

@@ -4,6 +4,7 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { Ticket } from './ticket.entity';
 import { TicketStatus } from './statusTickets.entity';
@@ -14,16 +15,16 @@ export class ResolutionTicket {
   @PrimaryGeneratedColumn({ name: 'id_resolution_ticket', type: 'int' })
   id_resolution_ticket: number;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', nullable: false })
   title: string;
 
   @Column({ type: 'text' })
   description: string;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  data: Date;
+  date: Date;
 
-  @ManyToOne(() => User, (user) => user.id_user)
+  @OneToMany(() => User, (user) => user.id_user)
   @JoinColumn({ name: 'id_helper' })
   id_helper: User;
 

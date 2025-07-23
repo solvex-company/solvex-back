@@ -18,6 +18,8 @@ import { TicketStatus } from './entities/statusTickets.entity';
 import { FileUploadService } from '../file-upload/file-upload.service';
 import { createTicketDto } from './dto/createTicket.dto';
 import { Area } from './entities/areas.entity';
+import { ResolutionTicket } from './entities/resolutionsTicket';
+import { resolutionTicketDto } from './dto/resolutionTicket.dto';
 
 @Injectable()
 export class TicketsService {
@@ -33,6 +35,8 @@ export class TicketsService {
     @InjectRepository(Area)
     private readonly areaRepository: Repository<Area>,
     private readonly fileUploadService: FileUploadService,
+    @InjectRepository(ResolutionTicket)
+    private readonly resolutionTicketRepository: Repository<ResolutionTicket>,
   ) {}
 
   async createTicket(
@@ -187,7 +191,7 @@ export class TicketsService {
   async getTicketById(ticketId: number) {
     const ticketFound: Ticket | null = await this.ticketRepository.findOne({
       where: { id_ticket: ticketId },
-      relations: ['id_empleado', 'id_status', 'id_helper'],
+      relations: ['id_empleado', 'id_status', 'id_helper', 'area'],
     });
 
     if (!ticketFound)
@@ -196,32 +200,61 @@ export class TicketsService {
     return ticketFound;
   }
 
-  async resolutionTicket(id_helper: string, ticketData: Ticket) {
+  async resolutionTicket(resolutionTicketDto: resolutionTicketDto) {
+    const helperFound: User | null = await this.userRepository.findOne({
+      where: { id_user: resolutionTicketDto.id_helper },
+    });
+
+    if (!helperFound)
+      throw new NotFoundException(
+        `El helper con id: ${resolutionTicketDto.id_helper} no fue encontrado`,
+      );
+
+    if (!resolutionTicketDto.title || !resolutionTicketDto.description) {
+      throw new BadRequestException('Title and description are required');
+    }
+
     const ticketFound: Ticket | null = await this.ticketRepository.findOne({
-      where: { id_ticket: ticketData.id_ticket },
-      relations: ['id_empleado'],
+      where: { id_ticket: resolutionTicketDto.id_ticket },
     });
 
     if (!ticketFound)
       throw new NotFoundException(
-        `Ticket con id ${ticketData.id_ticket} no se encontró`,
+        `Ticket with id: ${resolutionTicketDto.id_ticket} does not exist`,
       );
 
-    const helperFound: User | null = await this.userRepository.findOne({
-      where: { id_user: id_helper },
-    });
+    const ticketStatusFound: TicketStatus | null =
+      await this.statusRepository.findOne({
+        where: { name: resolutionTicketDto.ticketStatus },
+      });
 
-    if (!helperFound)
-      throw new NotFoundException(`Soporte con id ${id_helper} no se encontró`);
-
-    const employeeFound: User | null = await this.userRepository.findOneBy({
-      id_user: ticketData.id_empleado.id_user,
-    });
-
-    if (!employeeFound)
+    if (!ticketStatusFound)
       throw new NotFoundException(
-        `Empleado con id ${ticketData.id_empleado.id_user} no se encontró`,
+        `No se encontro ticket status ${resolutionTicketDto.ticketStatus}`,
       );
+
+    if (ticketStatusFound.name === 'Completed') {
+      ticketFound.closing_date = new Date();
+      await this.ticketRepository.save(ticketFound);
+    }
+
+    ticketFound.id_status = ticketStatusFound;
+    ticketFound.id_helper = helperFound;
+
+    await this.ticketRepository.save(ticketFound);
+
+    const newResolutionTicket: ResolutionTicket =
+      this.resolutionTicketRepository.create({
+        title: resolutionTicketDto.title,
+        description: resolutionTicketDto.description,
+        id_helper: helperFound,
+        ticket: ticketFound,
+        status: ticketStatusFound,
+      });
+
+    await this.resolutionTicketRepository.save(newResolutionTicket);
+
+    return newResolutionTicket;
   }
 
   async getTicketsReport() {

@@ -59,7 +59,7 @@ export class TicketsController {
   }
 
   @Get('getAllTickets')
-  @Roles(Role.HELPER, Role.ADMIN)
+  @Roles(Role.EMPLOYEE, Role.HELPER, Role.ADMIN)
   @UseGuards(AuthGuard, RolesGuard)
   getAllTickets() {
     return this.ticketsService.getAllTickets();

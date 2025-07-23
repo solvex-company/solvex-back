@@ -5,8 +5,15 @@ import { PaymentsService } from './payments.service';
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  @Get()
-  prueba() {
-    return this.paymentsService.prueba();
+  @Get('checkout')
+  async startMercadoPagoCheckout() {
+    const checkoutInfo =
+      await this.paymentsService.createMercadoPagoPreference();
+    return checkoutInfo;
+  }
+
+  @Get('sub')
+  sub() {
+    return this.paymentsService.sub();
   }
 }

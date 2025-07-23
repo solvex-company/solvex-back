@@ -29,13 +29,13 @@ import { Subscription } from './payments/entities/entity.subscription';
 import Oauth2Config from './config/OAuth2.config';
 import { AreaSeeder } from './seeders/areas.seeder';
 import { Area } from './tickets/entities/areas.entity';
+import mercadoPagoConfig from './config/mercado-pago.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [typeOrmConfig, Oauth2Config],
-      envFilePath: ['.env', '.env.development'],
+      load: [typeOrmConfig, Oauth2Config, mercadoPagoConfig],
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],

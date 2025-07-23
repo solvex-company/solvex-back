@@ -12,6 +12,8 @@ import {
   UnauthorizedException,
   Request,
   Param,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { TicketsService } from '../tickets/tickets.service';
@@ -57,7 +59,7 @@ export class TicketsController {
   }
 
   @Get('getAllTickets')
-  @Roles(Role.HELPER, Role.ADMIN)
+  @Roles(Role.EMPLOYEE, Role.HELPER, Role.ADMIN)
   @UseGuards(AuthGuard, RolesGuard)
   getAllTickets() {
     return this.ticketsService.getAllTickets();
@@ -76,5 +78,20 @@ export class TicketsController {
   @UseGuards(AuthGuard, RolesGuard)
   resolutionTicket(@Body() resolutionTicketDto: resolutionTicketDto) {
     return this.ticketsService.resolutionTicket(resolutionTicketDto);
+  }
+
+  @Get('report/summary')
+  @Roles(Role.ADMIN)
+  @UseGuards(AuthGuard, RolesGuard)
+  async getTicketReport() {
+    try {
+      return await this.ticketsService.getTicketsReport();
+    } catch (error) {
+      console.error('Error en getTicketReport:', error);
+      throw new HttpException(
+        'Error al generar el reporte',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

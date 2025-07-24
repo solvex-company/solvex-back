@@ -35,10 +35,10 @@ export class resolutionTicketDto {
   id_ticket: number;
 
   @ApiProperty({
-    description: 'id del helper',
-    example: '12334456779',
+    description: 'nombre del helper',
+    example: 'Robert',
   })
   @IsNotEmpty()
   @IsString()
-  id_helper: string;
+  helperEmail: string;
 }

@@ -12,15 +12,24 @@ import {
   UnauthorizedException,
   Res,
   BadRequestException,
+  Put,
+  Param,
 } from '@nestjs/common';
 import { loginDto } from 'src/users/dto/user.dto';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './utils/GoogleAuthGuard';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { JwtRequest } from './interfaces/jwt-request.interface';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { ChangePasswordDto } from 'src/auth/changePassword.dto';
+import { AuthGuard } from './auth.guard';
 
 @Controller('auth')
 @ApiTags('Authentication')
@@ -96,5 +105,15 @@ export class AuthController {
       console.error('Redirect handler error:', err);
       throw new UnauthorizedException('Google login failed');
     }
+  }
+
+  @ApiBearerAuth()
+  @Put('changePassword/:id_user')
+  @UseGuards(AuthGuard)
+  changePassword(
+    @Param('id_user') id_user: string,
+    @Body() changePassworDto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(id_user, changePassworDto);
   }
 }

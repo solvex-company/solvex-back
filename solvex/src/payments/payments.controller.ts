@@ -1,14 +1,18 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { JwtRequest } from 'src/auth/interfaces/jwt-request.interface';
 
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Get('checkout')
-  async startMercadoPagoCheckout() {
+  @UseGuards(AuthGuard)
+  async startMercadoPagoCheckout(@Req() req: JwtRequest) {
+    const userId: string = req.user.id;
     const checkoutInfo =
-      await this.paymentsService.createMercadoPagoPreference();
+      await this.paymentsService.createMercadoPagoPreference(userId);
     return checkoutInfo;
   }
 
@@ -17,14 +21,9 @@ export class PaymentsController {
     return this.paymentsService.sub();
   }
 
-  @Post('confirm')
-  async confirmPayment(
-    @Body() body: { payment_id: string; id_user: string; id_plan: number },
-  ) {
-    return this.paymentsService.confirmPayment(
-      body.payment_id,
-      body.id_user,
-      body.id_plan,
-    );
+  @Post('webhook')
+  async handleMercadoPagoWebhook(@Req() req: Request) {
+    console.log('LLEGO EL WEBHOOK A /payments/webhook', req.body);
+    return this.paymentsService.handleMercadoPagoWebhook(req.body);
   }
 }

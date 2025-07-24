@@ -8,6 +8,7 @@ import { TicketStatus } from './entities/statusTickets.entity';
 import { FileUploadModule } from 'src/file-upload/file-upload.module';
 import { Area } from './entities/areas.entity';
 import { ResolutionTicket } from './entities/resolutionsTicket';
+import { Credentials } from 'src/users/entities/Credentials.entity';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ResolutionTicket } from './entities/resolutionsTicket';
       TicketStatus,
       Area,
       ResolutionTicket,
+      Credentials,
     ]),
     FileUploadModule,
   ],

@@ -20,6 +20,7 @@ import { createTicketDto } from './dto/createTicket.dto';
 import { Area } from './entities/areas.entity';
 import { ResolutionTicket } from './entities/resolutionsTicket';
 import { resolutionTicketDto } from './dto/resolutionTicket.dto';
+import { Credentials } from 'src/users/entities/Credentials.entity';
 
 @Injectable()
 export class TicketsService {
@@ -35,6 +36,8 @@ export class TicketsService {
     @InjectRepository(Area)
     private readonly areaRepository: Repository<Area>,
     private readonly fileUploadService: FileUploadService,
+    @InjectRepository(Credentials)
+    private readonly credentialsRepository: Repository<Credentials>,
     @InjectRepository(ResolutionTicket)
     private readonly resolutionTicketRepository: Repository<ResolutionTicket>,
   ) {}
@@ -201,13 +204,15 @@ export class TicketsService {
   }
 
   async resolutionTicket(resolutionTicketDto: resolutionTicketDto) {
-    const helperFound: User | null = await this.userRepository.findOne({
-      where: { id_user: resolutionTicketDto.id_helper },
-    });
+    const credentialFound: Credentials | null =
+      await this.credentialsRepository.findOne({
+        where: { email: resolutionTicketDto.helperEmail },
+        relations: ['user'],
+      });
 
-    if (!helperFound)
+    if (!credentialFound)
       throw new NotFoundException(
-        `El helper con id: ${resolutionTicketDto.id_helper} no fue encontrado`,
+        `${resolutionTicketDto.helperEmail} not found`,
       );
 
     if (!resolutionTicketDto.title || !resolutionTicketDto.description) {
@@ -239,7 +244,7 @@ export class TicketsService {
     }
 
     ticketFound.id_status = ticketStatusFound;
-    ticketFound.id_helper = helperFound;
+    ticketFound.id_helper = credentialFound.user;
 
     await this.ticketRepository.save(ticketFound);
 
@@ -247,7 +252,7 @@ export class TicketsService {
       this.resolutionTicketRepository.create({
         title: resolutionTicketDto.title,
         description: resolutionTicketDto.description,
-        id_helper: helperFound,
+        id_helper: credentialFound.user,
         ticket: ticketFound,
         status: ticketStatusFound,
       });

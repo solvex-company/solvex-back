@@ -215,8 +215,8 @@ export class TicketsService {
         `${resolutionTicketDto.helperEmail} not found`,
       );
 
-    if (!resolutionTicketDto.title || !resolutionTicketDto.description) {
-      throw new BadRequestException('Title and description are required');
+    if (!resolutionTicketDto.response) {
+      throw new BadRequestException('Response are required');
     }
 
     const ticketFound: Ticket | null = await this.ticketRepository.findOne({
@@ -250,8 +250,7 @@ export class TicketsService {
 
     const newResolutionTicket: ResolutionTicket =
       this.resolutionTicketRepository.create({
-        title: resolutionTicketDto.title,
-        description: resolutionTicketDto.description,
+        response: resolutionTicketDto.response,
         id_helper: credentialFound.user,
         ticket: ticketFound,
         status: ticketStatusFound,

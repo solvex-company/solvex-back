@@ -15,11 +15,8 @@ export class ResolutionTicket {
   @PrimaryGeneratedColumn({ name: 'id_resolution_ticket', type: 'int' })
   id_resolution_ticket: number;
 
-  @Column({ type: 'varchar', nullable: false })
-  title: string;
-
   @Column({ type: 'text' })
-  description: string;
+  response: string;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   date: Date;

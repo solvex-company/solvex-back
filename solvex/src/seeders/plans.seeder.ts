@@ -1,25 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Plan } from 'src/payments/entities/entity.plan';
+//import { Injectable } from '@nestjs/common';
+//import { InjectRepository } from '@nestjs/typeorm';
+//import { Plan } from 'src/payments/entities/entity.plan';
 import { Repository } from 'typeorm';
 
-@Injectable()
-export class PlansSeeder {
-  constructor(
-    @InjectRepository(Plan)
-    private readonly planRepository: Repository<Plan>,
-  ) {}
+//@Injectable()
+//export class PlansSeeder {
+  //constructor(
+  //   @InjectRepository(Plan)
+  //   private readonly planRepository: Repository<Plan>,
+  // ) {}
 
-  async seed() {
-    const planExist = await this.planRepository.count();
-    if (planExist > 0) {
-      console.log(
-        '🟡 Los planes de suscripción ya existen. No se insertaron duplicados.',
-      );
-      return;
-    }
+  //async seed() {
+    //const planExist = await this.planRepository.count();
+    //if (planExist > 0) {
+    //  console.log(
+    //    '🟡 Los planes de suscripción ya existen. No se insertaron duplicados.',
+    //  );
+    //  return;
+    //}
 
-    const plans = [
+    /*const plans = [
       {
         plan_name: 'Plan 1 año',
         total_price: 100,
@@ -43,7 +43,8 @@ export class PlansSeeder {
       },
     ];
 
-    await this.planRepository.save(plans);
+    //await this.planRepository.save(plans);
     console.log('🟢 Planes de suscripción creados exitosamente.');
   }
 }
+}*/

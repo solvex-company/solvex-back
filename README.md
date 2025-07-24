@@ -198,3 +198,72 @@ Contraseña: tOmEKvxLCu
 
 Usuario: TESTUSER172172853
 Contraseña: euBFOQ5Z93
+
+### ACCESS TOKEN MERCADO PAGO
+
+Access Token: APP_USR-5372043080270248-071710-1654fdad50fa9e4a557b269b264cfdef-2567481644
+
+## Pruebas de flujo de pagos con Mercado Pago usando Insomnia
+
+### 1. Crear un usuario
+
+- Endpoint: `POST /auth/signup`
+- Body (JSON):
+
+```json
+{
+  "email": "prueba@example.com",
+  "password": "Password123!",
+  "password2": "Password123!",
+  "name": "prueba",
+  "lastname": "prueba",
+  "identification_number": "12345673",
+  "phone": "1234567890",
+  "typeId": 1
+}
+```
+
+### 2. Loguearse para obtener el token JWT
+
+- Endpoint: `POST /auth/signin`
+- Body (JSON):
+
+```json
+{
+  "email": "prueba@example.com",
+  "password": "Password123!"
+}
+```
+
+- La respuesta incluirá un campo `token`.
+
+### 3. Usar el token en el header Authorization para iniciar el checkout
+
+- Endpoint: `GET /payments/checkout`
+- Header:
+  - `Authorization: Bearer <token>`
+- Ejemplo en Insomnia:
+  - Método: `GET`
+  - URL: `http://localhost:4000/payments/checkout`
+  - Header: `Authorization: Bearer eyJhbGciOi...`
+
+### 4. Flujo completo
+
+1. Crear usuario (signup)
+2. Loguearse (signin) y copiar el token JWT de la respuesta
+3. Hacer GET a `/payments/checkout` con el header Authorization
+4. Usar el `paymentUrl` recibido para realizar el pago en Mercado Pago
+5. El backend recibirá los webhooks y actualizará el estado del pago automáticamente
+
+### IMPORTANTE PARA QUE FUNCIONE HAY QUE USAR NGROK
+
+Uso de ngrok para webhooks de Mercado Pago
+Si desarrollas localmente, necesitas una URL pública para que Mercado Pago pueda enviar los webhooks a tu backend.
+Usa ngrok para exponer tu servidor local:
+Instala ngrok y ejecuta en la terminal:
+ngrok http 4000
+(Reemplaza 4000 por el puerto de tu backend si es diferente).
+ngrok te dará una URL pública como https://abcd1234.ngrok.io.
+Usa esa URL en el campo notification_url al crear la preferencia de pago, por ejemplo:
+notification_url: 'https://abcd1234.ngrok.io/payments/webhook'
+Importante: Cada vez que reinicies ngrok, la URL cambiará. Actualiza el notification_url con la nueva URL.

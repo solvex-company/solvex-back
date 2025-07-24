@@ -61,22 +61,23 @@ export class PaymentsService {
     }
   }
 
-  async sub() {
-    await this.preapproval
-      .create({
-        body: {
-          reason: 'Premium Membership',
-          auto_recurring: {
-            frequency: 1,
-            frequency_type: 'months',
-            transaction_amount: 50,
-            currency_id: 'ARS', // or 'USD'
-          },
-          back_url: 'https://your-site.com/subscription/approved',
-          payer_email: 'pepito@faklsdfa.com', // Optional: pre-fill payer
-        },
-      })
-      .then(console.log)
-      .catch(console.log);
-  }
+  ///// prueba suscripcion, no borrar
+  // async sub() {
+  //   await this.preapproval
+  //     .create({
+  //       body: {
+  //         reason: 'Premium Membership',
+  //         auto_recurring: {
+  //           frequency: 1,
+  //           frequency_type: 'months',
+  //           transaction_amount: 50,
+  //           currency_id: 'ARS', // or 'USD'
+  //         },
+  //         back_url: 'https://your-site.com/subscription/approved',
+  //         payer_email: 'pepito@faklsdfa.com', // Optional: pre-fill payer
+  //       },
+  //     })
+  //     .then(console.log)
+  //     .catch(console.log);
+  // }
 }

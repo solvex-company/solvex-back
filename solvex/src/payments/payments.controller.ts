@@ -12,8 +12,9 @@ export class PaymentsController {
     return checkoutInfo;
   }
 
-  @Get('sub')
-  sub() {
-    return this.paymentsService.sub();
-  }
+  ///// prueba suscripcion, no borrar
+  // @Get('sub')
+  // sub() {
+  //   return this.paymentsService.sub();
+  // }
 }

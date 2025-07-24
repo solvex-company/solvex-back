@@ -45,6 +45,10 @@ Recordar iniciar sesion con la cuenta de solvex:
 
 - Importante: Crear .env.development al nivel de la carpeta principal solvex y crear primero la base de datos en postgres
 
+Para backend:
+
+- MP_ACCESS_TOKEN='Aqui va el access token de MercadoPago'
+
 ### Ejemplo consumo de ruta register
 
 - Ejemplo con campos opcionales (Recomendado)
@@ -82,8 +86,8 @@ en el json 1 se pueden omitir los campos de Role y Second_name, al ser opciones 
 ### EJEMPLO DE LOGIN USUARIO
 
 {
-        "email": "prueba@example.com",
-		"password": "Password!123"
+"email": "prueba@example.com",
+"password": "Password!123"
 }
 
 ### Ejemplo de respuesta al realizar register:
@@ -162,26 +166,26 @@ En caso de dudas se anexara una imagen al discord para un ejemplo más grafico
 ### DATOS DE SEEDER PLAN
 
 {
-        plan_name: 'Plan 1 año',
-        total_price: 100,
-        duration_plan_years: 1,
-        percentage_discount: 0,
-        annual_price: 100,
-      },
-      {
-        plan_name: 'Plan 3 años',
-        total_price: 225,
-        duration_plan_years: 3,
-        percentage_discount: 25,
-        annual_price: 75,
-      },
-      {
-        plan_name: 'Plan 5 años',
-        total_price: 375,
-        duration_plan_years: 5,
-        percentage_discount: 25,
-        annual_price: 125,
-      },
+plan_name: 'Plan 1 año',
+total_price: 100,
+duration_plan_years: 1,
+percentage_discount: 0,
+annual_price: 100,
+},
+{
+plan_name: 'Plan 3 años',
+total_price: 225,
+duration_plan_years: 3,
+percentage_discount: 25,
+annual_price: 75,
+},
+{
+plan_name: 'Plan 5 años',
+total_price: 375,
+duration_plan_years: 5,
+percentage_discount: 25,
+annual_price: 125,
+},
 
 ### CUENTAS TEST MERCADO PAGO
 
@@ -194,7 +198,3 @@ Contraseña: tOmEKvxLCu
 
 Usuario: TESTUSER172172853
 Contraseña: euBFOQ5Z93
-
-### ACCESS TOKEN MERCADO PAGO
-
-Access Token: APP_USR-5372043080270248-071710-1654fdad50fa9e4a557b269b264cfdef-2567481644

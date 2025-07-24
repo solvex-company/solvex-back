@@ -4,7 +4,6 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
-  OneToMany,
 } from 'typeorm';
 import { Ticket } from './ticket.entity';
 import { TicketStatus } from './statusTickets.entity';
@@ -21,7 +20,7 @@ export class ResolutionTicket {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   date: Date;
 
-  @OneToMany(() => User, (user) => user.id_user)
+  @ManyToOne(() => User, (user) => user.id_user)
   @JoinColumn({ name: 'id_helper' })
   id_helper: User;
 

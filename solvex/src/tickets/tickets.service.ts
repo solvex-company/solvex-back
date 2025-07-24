@@ -261,6 +261,19 @@ export class TicketsService {
     return newResolutionTicket;
   }
 
+  async getResolutionTicketById(idResolution: number) {
+    const resolutionTicketFound: ResolutionTicket | null =
+      await this.resolutionTicketRepository.findOne({
+        where: { id_resolution_ticket: idResolution },
+        relations: ['id_helper'],
+      });
+
+    if (!resolutionTicketFound)
+      throw new NotFoundException(`Ticket with id: ${idResolution} not found`);
+
+    return resolutionTicketFound;
+  }
+
   async getTicketsReport() {
     try {
       const [statusCounts, supportEmployees] = await Promise.all([

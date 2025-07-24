@@ -73,11 +73,20 @@ export class TicketsController {
     return this.ticketsService.getTicketById(ticketId);
   }
 
+  @ApiBearerAuth()
   @Post('resolutionTicket')
   @Roles(Role.HELPER)
   @UseGuards(AuthGuard, RolesGuard)
   resolutionTicket(@Body() resolutionTicketDto: resolutionTicketDto) {
     return this.ticketsService.resolutionTicket(resolutionTicketDto);
+  }
+
+  @ApiBearerAuth()
+  @Get('resolution/:idResolution')
+  @Roles(Role.EMPLOYEE)
+  @UseGuards(AuthGuard, RolesGuard)
+  getResolutionTicketById(@Param('idResolution') idResolution: number) {
+    return this.ticketsService.getResolutionTicketById(idResolution);
   }
 
   @Get('report/summary')

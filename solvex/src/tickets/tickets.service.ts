@@ -265,6 +265,7 @@ export class TicketsService {
     const resolutionTicketFound: ResolutionTicket | null =
       await this.resolutionTicketRepository.findOne({
         where: { id_resolution_ticket: idResolution },
+        relations: ['id_helper'],
       });
 
     if (!resolutionTicketFound)

@@ -8,9 +8,6 @@ import * as express from 'express'; // Importa express para usar su body parser
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Middleware para parsear JSON en los requests
-  // Esto es fundamental para que req.body no sea undefined en los controladores
-  app.use(express.json());
 
   app.useGlobalPipes(new ValidationPipe());
 

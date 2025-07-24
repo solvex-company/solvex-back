@@ -23,7 +23,6 @@ export class PaymentsController {
 
   @Post('webhook')
   async handleMercadoPagoWebhook(@Req() req: Request) {
-    console.log('LLEGO EL WEBHOOK A /payments/webhook', req.body);
     return this.paymentsService.handleMercadoPagoWebhook(req.body);
   }
 }

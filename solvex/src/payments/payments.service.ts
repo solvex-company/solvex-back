@@ -24,6 +24,7 @@ export class PaymentsService {
   private readonly preference: Preference;
   private readonly paymentClient: MpPayment;
   private readonly preapproval: PreApproval;
+  private readonly webHookUrl: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -31,6 +32,7 @@ export class PaymentsService {
     private readonly paymentRepository: Repository<Payment>,
   ) {
     const token = this.configService.get<string>('mercadoPago.accessToken')!;
+    this.webHookUrl = this.configService.get<string>('mercadoPago.webHookUrl')!;
     this.client = new MercadoPagoConfig({ accessToken: token });
     this.preference = new Preference(this.client);
     this.paymentClient = new MpPayment(this.client);
@@ -111,8 +113,7 @@ export class PaymentsService {
             ],
           },
           // URL pública donde Mercado Pago enviará el webhook
-          notification_url:
-            'https://3ff110fa967e.ngrok-free.app/payments/webhook', // <-- Reemplaza por tu URL real
+          notification_url: this.webHookUrl,
         },
       });
 

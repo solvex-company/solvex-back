@@ -18,6 +18,7 @@ import { TicketStatus } from './entities/statusTickets.entity';
 import { FileUploadService } from '../file-upload/file-upload.service';
 import { createTicketDto } from './dto/createTicket.dto';
 import { Area } from './entities/areas.entity';
+import { MailService } from 'src/notifications/mail/mail.service';
 
 @Injectable()
 export class TicketsService {
@@ -33,6 +34,7 @@ export class TicketsService {
     @InjectRepository(Area)
     private readonly areaRepository: Repository<Area>,
     private readonly fileUploadService: FileUploadService,
+    private readonly mailService: MailService,
   ) {}
 
   async createTicket(
@@ -44,8 +46,6 @@ export class TicketsService {
       if (!createTicketData.title || !createTicketData.description) {
         throw new BadRequestException('Title and description are required');
       }
-
-      console.log(`controller ${user.id}`);
 
       const userFound = await this.userRepository.findOne({
         where: { id_user: user.id },
@@ -107,6 +107,9 @@ export class TicketsService {
         this.logger.log(
           `Ticket created successfully for area ${areaFound.name} by user ${userFound.id_user}`,
         );
+        this.sendTicketNotifications(savedTicket).catch((e) =>
+          this.logger.error('Error sending notifications', e),
+        );
 
         const foundTicket = await this.ticketRepository.findOne({
           where: { id_ticket: savedTicket.id_ticket },
@@ -137,6 +140,35 @@ export class TicketsService {
 
       this.logger.log(`ID EMPLEADO: ${user.id}`);
       throw new InternalServerErrorException('Failed to create ticket');
+    }
+  }
+
+  private async sendTicketNotifications(ticket: Ticket) {
+    try {
+      const creator = await this.userRepository.findOne({
+        where: { id_user: ticket.id_empleado.id_user },
+        relations: ['credentials'],
+      });
+
+      if (!creator || !creator.credentials) {
+        this.logger.warn(
+          `Dont found credentials of user: ${ticket.id_empleado.id_user}`,
+        );
+        return;
+      }
+
+      await this.mailService.sendTicketCreationEmail(
+        creator.credentials.email,
+        {
+          id: ticket.id_ticket,
+          title: ticket.title,
+          description: ticket.description,
+          area: ticket.area.name,
+          date: ticket.creation_date.toLocaleString(),
+        },
+      );
+    } catch {
+      this.logger.error('error to sending email');
     }
   }
 

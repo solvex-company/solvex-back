@@ -65,38 +65,19 @@ export class NotificationService implements OnModuleInit {
    * El contador se reinicia si el helper resuelve un ticket.
    */
   async notifyAdminHelpersInactive() {
-    console.log('🔍 Iniciando verificación de inactividad de helpers...');
-    
     // Buscar el rol Soporte y Admin según la base de datos
     const helperRole = await this.rolesRepository.findOne({ where: { role_name: 'Soporte' } });
-    if (!helperRole) {
-      console.log('❌ No se encontró el rol Soporte');
-      return;
-    }
-    console.log('✅ Rol Soporte encontrado:', helperRole.role_name);
-    
+    if (!helperRole) return;
     const helpers = await this.userRepository.find({ where: { role: helperRole } });
-    console.log(`📋 Encontrados ${helpers.length} helpers`);
 
     const adminRole = await this.rolesRepository.findOne({ where: { role_name: 'Admin' } });
-    if (!adminRole) {
-      console.log('❌ No se encontró el rol Admin');
-      return;
-    }
-    console.log('✅ Rol Admin encontrado:', adminRole.role_name);
-    
+    if (!adminRole) return;
     const admin = await this.userRepository.findOne({ where: { role: adminRole } });
-    if (!admin) {
-      console.log('❌ No se encontró ningún usuario Admin');
-      return;
-    }
-    console.log('✅ Admin encontrado:', admin.name);
+    if (!admin) return;
 
     const now = new Date();
 
     for (const helper of helpers) {
-      console.log(`\n🔍 Verificando helper: ${helper.name} ${helper.lastname}`);
-      
       // Buscar la última resolución de ticket de este helper
       const lastResolution = await this.resolutionTicketRepository.findOne({
         where: { id_helper: helper },
@@ -106,14 +87,10 @@ export class NotificationService implements OnModuleInit {
 
       // Calcular horas desde la última resolución
       const hoursSince = (now.getTime() - new Date(lastDate).getTime()) / (1000 * 60 * 60);
-      console.log(`⏰ Horas desde última resolución: ${hoursSince.toFixed(2)}`);
-      
       // Primer aviso a las 48h, luego cada 24h
       if (hoursSince >= 48) {
         const avisos = Math.floor((hoursSince - 48) / 24) + 1;
         const message = `El helper ${helper.name} ${helper.lastname} no ha resuelto tickets en ${48 + (avisos - 1) * 24}hs`;
-        console.log(`📝 Mensaje a crear: ${message}`);
-        
         const existing = await this.notificationRepository.findOne({
           where: {
             user: admin,
@@ -121,22 +98,14 @@ export class NotificationService implements OnModuleInit {
             message,
           },
         });
-        
         if (!existing) {
-          console.log('✅ Creando nueva notificación...');
-          try {
-            const notification = await this.createNotification(admin, undefined, message);
-            console.log('✅ Notificación creada exitosamente:', notification.id);
-          } catch (error) {
-            console.error('❌ Error al crear notificación:', error);
-          }
-        } else {
-          console.log('⏭️ Notificación ya existe, saltando...');
+          await this.createNotification(
+            admin,
+            undefined,
+            message
+          );
         }
-      } else {
-        console.log('⏰ Helper aún no cumple las 48 horas de inactividad');
       }
     }
-    console.log('🏁 Verificación de inactividad completada\n');
   }
 }

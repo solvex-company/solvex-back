@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -32,8 +36,52 @@ export class PaymentsService {
     this.paymentClient = new MpPayment(this.client);
     this.preapproval = new PreApproval(this.client);
   }
+  ////verificar si existe un preference activo si existe redirigir , si fecha, poner como expirado
+  //// si el pago esta pending, poner pago pendiente,
+  //// si el pago esta rejected seguir
+
+  async userHasApprovedPayment(userId: string): Promise<boolean> {
+    const payment = await this.paymentRepository.findOne({
+      where: { userId: userId, status: 'approved' },
+    });
+    return !!payment;
+  }
+
   async createMercadoPagoPreference(userId: string) {
     try {
+      const hasPaid = await this.userHasApprovedPayment(userId);
+      if (hasPaid) {
+        throw new BadRequestException('El usuario ya ha realizado el pago.');
+      }
+
+      const pendingPayment = await this.paymentRepository.findOne({
+        where: { userId: userId, status: 'pending' },
+      });
+      if (pendingPayment) {
+        throw new BadRequestException('El usuario tiene un pago pendiente.');
+      }
+
+      const existingPreference = await this.paymentRepository.findOne({
+        where: { userId, status: 'created' },
+      });
+
+      if (
+        existingPreference &&
+        new Date() < existingPreference.init_point_expiration_date
+      ) {
+        return {
+          preferenceId: existingPreference.mp_preference_id,
+          paymentUrl: existingPreference.init_point,
+        };
+      } else if (existingPreference) {
+        await this.paymentRepository.update(
+          { id_payment: existingPreference.id_payment },
+          { status: 'expired' },
+        );
+      }
+
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes later
       ////.create manda un request al API de Mercado Pago con la preferencia (sesion de pago).
       const preferenceResponse = await this.preference.create({
         body: {
@@ -51,6 +99,8 @@ export class PaymentsService {
             failure: 'https://localhost:3000/failure',
             pending: 'https://localhost:3000/pending',
           },
+          expiration_date_from: now.toISOString(),
+          expiration_date_to: expiresAt.toISOString(),
           //si el pago es aprobado el usuario sera retornado al back_url de success automaticamente, caso contrario tendra que dar click manualmente en regresar al sitio
           auto_return: 'approved',
           payment_methods: {
@@ -91,6 +141,8 @@ export class PaymentsService {
       }
       const newPayment: Payment = this.paymentRepository.create({
         mp_payment_id: null,
+        init_point: init_point,
+        init_point_expiration_date: new Date(Date.now() + 15 * 60 * 1000), // expires in 15 min
         amount: items[0].unit_price,
         currency: items[0].currency_id,
         status: 'created',

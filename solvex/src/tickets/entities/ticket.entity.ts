@@ -37,7 +37,7 @@ export class Ticket {
   @Column({ type: 'varchar', default: 'no image' })
   img_3: string;
 
-  @ManyToOne(() => TicketStatus, (status) => status.id_status)
+  @ManyToOne(() => TicketStatus, (status) => status.tickets)
   @JoinColumn({ name: 'id_status' })
   id_status: TicketStatus;
 

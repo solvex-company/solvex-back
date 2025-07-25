@@ -30,6 +30,8 @@ import Oauth2Config from './config/OAuth2.config';
 import { AreaSeeder } from './seeders/areas.seeder';
 import { Area } from './tickets/entities/areas.entity';
 import mercadoPagoConfig from './config/mercado-pago.config';
+import { Ticket } from './tickets/entities/ticket.entity';
+import { TicketSeeder } from './seeders/areas.seeder copy';
 
 @Module({
   imports: [
@@ -52,6 +54,7 @@ import mercadoPagoConfig from './config/mercado-pago.config';
       Payment,
       // Subscription,
       Area,
+      Ticket,
     ]),
     UsersModule,
     AuthModule,
@@ -71,6 +74,7 @@ import mercadoPagoConfig from './config/mercado-pago.config';
     TicketStatusSeeder,
     //PlansSeeder,
     AreaSeeder,
+    TicketSeeder,
   ],
 })
 export class AppModule implements OnApplicationBootstrap, NestModule {
@@ -81,6 +85,7 @@ export class AppModule implements OnApplicationBootstrap, NestModule {
     private readonly ticketStatusSeeder: TicketStatusSeeder,
     //private readonly plansSeeder: PlansSeeder,
     private readonly AreaSeeder: AreaSeeder,
+    private readonly ticketSeeder: TicketSeeder,
   ) {}
 
   configure(consumer: MiddlewareConsumer) {
@@ -94,5 +99,6 @@ export class AppModule implements OnApplicationBootstrap, NestModule {
     await this.ticketStatusSeeder.seed();
     //await this.plansSeeder.seed();
     await this.userSeeder.seed();
+    await this.ticketSeeder.seed();
   }
 }

@@ -21,9 +21,15 @@ import { Credentials } from './users/entities/Credentials.entity';
 import { TicketsModule } from './tickets/tickets.module';
 import { TicketStatusSeeder } from './seeders/statusTickets.seeder';
 import { TicketStatus } from './tickets/entities/statusTickets.entity';
+import { PaymentsModule } from './payments/payments.module';
+//import { PlansSeeder } from './seeders/plans.seeder';
+//import { Plan } from './payments/entities/entity.plan';
+import { Payment } from './payments/entities/entity.payment';
+// import { Subscription } from './payments/entities/entity.subscription';
 import Oauth2Config from './config/OAuth2.config';
 import { AreaSeeder } from './seeders/areas.seeder';
 import { Area } from './tickets/entities/areas.entity';
+import mercadoPagoConfig from './config/mercado-pago.config';
 import { Ticket } from './tickets/entities/ticket.entity';
 import { TicketSeeder } from './seeders/areas.seeder copy';
 
@@ -31,7 +37,7 @@ import { TicketSeeder } from './seeders/areas.seeder copy';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [typeOrmConfig, Oauth2Config],
+      load: [typeOrmConfig, Oauth2Config, mercadoPagoConfig],
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -44,6 +50,9 @@ import { TicketSeeder } from './seeders/areas.seeder copy';
       User,
       Credentials,
       TicketStatus,
+      // Plan,
+      Payment,
+      // Subscription,
       Area,
       Ticket,
     ]),
@@ -55,6 +64,7 @@ import { TicketSeeder } from './seeders/areas.seeder copy';
       secret: process.env.JWT_SECRET,
     }),
     TicketsModule,
+    PaymentsModule,
   ],
   controllers: [],
   providers: [
@@ -62,6 +72,7 @@ import { TicketSeeder } from './seeders/areas.seeder copy';
     TypeIdSeeder,
     UserSeeder,
     TicketStatusSeeder,
+    //PlansSeeder,
     AreaSeeder,
     TicketSeeder,
   ],
@@ -72,6 +83,7 @@ export class AppModule implements OnApplicationBootstrap, NestModule {
     private readonly typeIdSeeder: TypeIdSeeder,
     private readonly userSeeder: UserSeeder,
     private readonly ticketStatusSeeder: TicketStatusSeeder,
+    //private readonly plansSeeder: PlansSeeder,
     private readonly AreaSeeder: AreaSeeder,
     private readonly ticketSeeder: TicketSeeder,
   ) {}
@@ -85,6 +97,7 @@ export class AppModule implements OnApplicationBootstrap, NestModule {
     await this.typeIdSeeder.seed();
     await this.AreaSeeder.seed();
     await this.ticketStatusSeeder.seed();
+    //await this.plansSeeder.seed();
     await this.userSeeder.seed();
     await this.ticketSeeder.seed();
   }

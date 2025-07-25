@@ -3,9 +3,12 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NotReturnPasswordInterceptor } from './interceptor/not-return-password.interceptor';
+import * as express from 'express'; // Importa express para usar su body parser
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+
   app.useGlobalPipes(new ValidationPipe());
 
   const swaggerConfig = new DocumentBuilder()

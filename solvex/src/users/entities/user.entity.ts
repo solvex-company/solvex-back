@@ -5,10 +5,13 @@ import {
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
+  OneToMany,
 } from 'typeorm';
 import { Roles } from './Roles.entity';
 import { Credentials } from './Credentials.entity';
 import { TypeId } from './typeId.entity';
+// import { Subscription } from 'src/payments/entities/entity.subscription';
+import { Payment } from 'src/payments/entities/entity.payment';
 
 @Entity({ name: 'users' })
 export class User {
@@ -37,4 +40,10 @@ export class User {
   @ManyToOne(() => Roles, (role) => role.users)
   @JoinColumn({ name: 'id_role' })
   role: Roles;
+
+  @OneToMany(() => Payment, (payment) => payment.user)
+  payments: Payment[];
+
+  // @OneToOne(() => Subscription, (subscription) => subscription.id_admin)
+  // subscriptions: Subscription[];
 }

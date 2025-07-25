@@ -61,7 +61,7 @@ export class AuthService {
 
     const savedUser = await this.usersRepository.save(user);
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const hashedPassword: string = await bcrypt.hash(userData.password, 10);
 
     const credentials = this.credentialsRepository.create({
@@ -100,7 +100,7 @@ export class AuthService {
 
     if (!findUser) throw new BadRequestException('Incorrect credentials');
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const passwordMatch = await bcrypt.compare(
       credentials.password,
       findUser.password,
@@ -111,10 +111,6 @@ export class AuthService {
       id: findUser.user.id_user,
       email: findUser.email,
       id_role: findUser.user.role.id_role,
-      name: findUser.user.name,
-      lastname: findUser.user.lastname,
-      phone: findUser.user.phone,
-      identification_number: findUser.user.identification_number,
     };
     const token = this.jwtService.sign(payload);
     return token;

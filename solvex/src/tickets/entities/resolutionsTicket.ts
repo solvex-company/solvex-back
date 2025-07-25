@@ -14,14 +14,11 @@ export class ResolutionTicket {
   @PrimaryGeneratedColumn({ name: 'id_resolution_ticket', type: 'int' })
   id_resolution_ticket: number;
 
-  @Column({ type: 'varchar' })
-  title: string;
-
   @Column({ type: 'text' })
-  description: string;
+  response: string;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  data: Date;
+  date: Date;
 
   @ManyToOne(() => User, (user) => user.id_user)
   @JoinColumn({ name: 'id_helper' })

@@ -17,6 +17,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { GoogleProfile } from './interfaces/google-profile.interface';
+import { ChangePasswordDto } from 'src/auth/changePassword.dto';
 
 @Injectable()
 export class AuthService {
@@ -168,5 +169,42 @@ export class AuthService {
   createJwtToken(payload: JwtPayload) {
     const token = this.jwtService.sign(payload);
     return token;
+  }
+
+  async changePassword(id_user: string, changePassworDto: ChangePasswordDto) {
+    const userFound: User | null = await this.usersRepository.findOne({
+      where: { id_user: id_user },
+    });
+
+    if (!userFound)
+      throw new NotFoundException(`Usuer with id: ${id_user} not found`);
+
+    const credentialFound: Credentials | null =
+      await this.credentialsRepository.findOne({
+        where: { user: userFound },
+      });
+
+    if (!credentialFound) throw new NotFoundException('credentials not found');
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    const compareOldPassword: boolean = await bcrypt.compare(
+      changePassworDto.oldPassword,
+      credentialFound.password,
+    );
+
+    if (!compareOldPassword)
+      throw new BadRequestException('old password does not match');
+
+    if (changePassworDto.newPassword2 !== changePassworDto.newPassword2)
+      throw new BadRequestException('new passwords do not match');
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    const changedPassword = await bcrypt.hash(changePassworDto.newPassword, 10);
+
+    credentialFound.password = changedPassword;
+
+    await this.credentialsRepository.save(credentialFound);
+
+    return 'password chande with success';
   }
 }

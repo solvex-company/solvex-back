@@ -19,11 +19,11 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { TicketsService } from '../tickets/tickets.service';
 import { createTicketDto } from './dto/createTicket.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { Ticket } from './entities/ticket.entity';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Role } from 'src/roles.enum';
 import { Roles } from 'src/decorators/roles.decorators';
 import { RolesGuard } from 'src/auth/roles.guard';
+import { resolutionTicketDto } from './dto/resolutionTicket.dto';
 
 @Controller('tickets')
 export class TicketsController {
@@ -73,14 +73,20 @@ export class TicketsController {
     return this.ticketsService.getTicketById(ticketId);
   }
 
-  @Post('resolutionTicket/:id_helper')
+  @ApiBearerAuth()
+  @Post('resolutionTicket')
   @Roles(Role.HELPER)
   @UseGuards(AuthGuard, RolesGuard)
-  resolutionTicket(
-    @Param('id_helper') id_helper: string,
-    @Body() ticketData: Ticket,
-  ) {
-    return this.ticketsService.resolutionTicket(id_helper, ticketData);
+  resolutionTicket(@Body() resolutionTicketDto: resolutionTicketDto) {
+    return this.ticketsService.resolutionTicket(resolutionTicketDto);
+  }
+
+  @ApiBearerAuth()
+  @Get('resolution/:idResolution')
+  @Roles(Role.EMPLOYEE)
+  @UseGuards(AuthGuard, RolesGuard)
+  getResolutionTicketById(@Param('idResolution') idResolution: number) {
+    return this.ticketsService.getResolutionTicketById(idResolution);
   }
 
   @Get('report/summary')

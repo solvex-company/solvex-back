@@ -47,28 +47,4 @@ export class NotificationService {
     throw new Error('Notification not found');
   }
 
-  // CRON: Cada hora revisa los tickets resueltos y crea notificaciones internas
-  @Cron(CronExpression.EVERY_HOUR)
-  async notifyResolvedTickets() {
-    // Buscar tickets con estado 'resuelto' que no tengan notificación
-    const resolvedTickets = await this.ticketRepository.find({
-      where: { id_status: { name: 'resuelto' } },
-      relations: ['id_empleado', 'id_status'],
-    });
-
-    for (const ticket of resolvedTickets) {
-      // Verificar si ya existe una notificación para este ticket y usuario
-      const existing = await this.notificationRepository.findOne({
-        where: { ticket: { id_ticket: ticket.id_ticket }, user: { id_user: ticket.id_empleado.id_user } },
-      });
-      if (!existing) {
-        // Crear la notificación interna
-        await this.createNotification(
-          ticket.id_empleado,
-          ticket,
-          `Tu ticket "${ticket.title}" ha sido resuelto.`
-        );
-      }
-    }
-  }
 }

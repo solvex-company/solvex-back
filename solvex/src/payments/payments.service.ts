@@ -113,11 +113,7 @@ export class PaymentsService {
             ],
           },
           // URL pública donde Mercado Pago enviará el webhook
-<<<<<<< HEAD
-          notification_url: 'https://d35b30d77840.ngrok-free.app/payments/checkout', // <-- Reemplaza por tu URL real
-=======
           notification_url: this.webHookUrl,
->>>>>>> 5dc80eb73d099231165da0fe591e1ef56dace927
         },
       });
 

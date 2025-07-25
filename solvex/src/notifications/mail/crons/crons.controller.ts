@@ -8,24 +8,36 @@ import {
 } from '@nestjs/common';
 import { NotificationService } from './crons.service';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { RolesGuard } from 'src/auth/roles.guard';
+// import { RolesGuard } from 'src/auth/roles.guard';
+// import { NotificationRolesGuard } from './notification-roles.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
+// import { Roles } from 'src/decorators/roles.decorators';
+// import { Role } from 'src/roles.enum';
 
 @ApiBearerAuth()
 @Controller('notifications')
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
+  // Obtener notificaciones del usuario autenticado (protegido solo por AuthGuard)
+  @UseGuards(AuthGuard)
   @Get()
-  @UseGuards(AuthGuard, RolesGuard)
   async getUserNotifications(@Request() req: any) {
-    // req.user.id_user debe estar disponible por el AuthGuard
     return this.notificationService.getUserNotifications(req.user.id_user);
   }
 
+  // Marcar una notificación como leída (protegido solo por AuthGuard)
+  @UseGuards(AuthGuard)
   @Patch(':id/read')
-  @UseGuards(AuthGuard, RolesGuard)
-  async markAsRead(@Param('id') id: string) {
+  async markAsRead(@Request() req: any, @Param('id') id: string) {
     return this.notificationService.markAsRead(Number(id));
+  }
+
+  // Ejecutar manualmente el cron de notificaciones (protegido solo por AuthGuard)
+  @UseGuards(AuthGuard)
+  @Get('test-cron')
+  async testCron(@Request() req: any) {
+    await this.notificationService.notifyAdminHelpersInactive();
+    return { message: 'CRON ejecutado manualmente' };
   }
 } 

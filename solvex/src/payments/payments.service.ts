@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -32,8 +36,52 @@ export class PaymentsService {
     this.paymentClient = new MpPayment(this.client);
     this.preapproval = new PreApproval(this.client);
   }
+  ////verificar si existe un preference activo si existe redirigir , si fecha, poner como expirado
+  //// si el pago esta pending, poner pago pendiente,
+  //// si el pago esta rejected seguir
+
+  async userHasApprovedPayment(userId: string): Promise<boolean> {
+    const payment = await this.paymentRepository.findOne({
+      where: { userId: userId, status: 'approved' },
+    });
+    return !!payment;
+  }
+
   async createMercadoPagoPreference(userId: string) {
     try {
+      const hasPaid = await this.userHasApprovedPayment(userId);
+      if (hasPaid) {
+        throw new BadRequestException('El usuario ya ha realizado el pago.');
+      }
+
+      const pendingPayment = await this.paymentRepository.findOne({
+        where: { userId: userId, status: 'pending' },
+      });
+      if (pendingPayment) {
+        throw new BadRequestException('El usuario tiene un pago pendiente.');
+      }
+
+      const existingPreference = await this.paymentRepository.findOne({
+        where: { userId, status: 'created' },
+      });
+
+      if (
+        existingPreference &&
+        new Date() < existingPreference.init_point_expiration_date
+      ) {
+        return {
+          preferenceId: existingPreference.mp_preference_id,
+          paymentUrl: existingPreference.init_point,
+        };
+      } else if (existingPreference) {
+        await this.paymentRepository.update(
+          { id_payment: existingPreference.id_payment },
+          { status: 'expired' },
+        );
+      }
+
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes later
       ////.create manda un request al API de Mercado Pago con la preferencia (sesion de pago).
       const preferenceResponse = await this.preference.create({
         body: {
@@ -51,6 +99,8 @@ export class PaymentsService {
             failure: 'https://localhost:3000/failure',
             pending: 'https://localhost:3000/pending',
           },
+          expiration_date_from: now.toISOString(),
+          expiration_date_to: expiresAt.toISOString(),
           //si el pago es aprobado el usuario sera retornado al back_url de success automaticamente, caso contrario tendra que dar click manualmente en regresar al sitio
           auto_return: 'approved',
           payment_methods: {
@@ -61,12 +111,20 @@ export class PaymentsService {
             ],
           },
           // URL pública donde Mercado Pago enviará el webhook
+<<<<<<< HEAD
           notification_url: 'https://d35b30d77840.ngrok-free.app/payments/checkout', // <-- Reemplaza por tu URL real
+=======
+          notification_url:
+            'https://3ff110fa967e.ngrok-free.app/payments/webhook', // <-- Reemplaza por tu URL real
+>>>>>>> d21ce9297d0ed05ca14ade8520d4b2cf882e50ae
         },
       });
 
       // Log de toda la respuesta de la preferencia para depuración
-      console.log('Respuesta completa de preference.create:', preferenceResponse);
+      console.log(
+        'Respuesta completa de preference.create:',
+        preferenceResponse,
+      );
       const { id, init_point, items } = preferenceResponse;
       // Log del valor que se va a guardar como mp_preference_id
       console.log('Guardando mp_preference_id:', id);
@@ -87,6 +145,8 @@ export class PaymentsService {
       }
       const newPayment: Payment = this.paymentRepository.create({
         mp_payment_id: null,
+        init_point: init_point,
+        init_point_expiration_date: new Date(Date.now() + 15 * 60 * 1000), // expires in 15 min
         amount: items[0].unit_price,
         currency: items[0].currency_id,
         status: 'created',
@@ -130,24 +190,35 @@ export class PaymentsService {
     // 1. Si el webhook es de tipo merchant_order, busca el mp_preference_id y actualiza solo el registro correcto
     if (data?.topic === 'merchant_order' || data?.type === 'merchant_order') {
       let orderId: string | undefined = undefined;
-      if (data?.resource && typeof data.resource === 'string' && data.resource.includes('/merchant_orders/')) {
+      if (
+        data?.resource &&
+        typeof data.resource === 'string' &&
+        data.resource.includes('/merchant_orders/')
+      ) {
         orderId = data.resource.split('/merchant_orders/')[1];
       } else if (data?.id) {
         orderId = String(data.id);
       }
       if (orderId) {
         // Consulta a Mercado Pago para obtener los detalles de la orden y el preference_id
-        const accessToken = this.configService.get<string>('mercadoPago.accessToken');
-        const response = await fetch(`https://api.mercadopago.com/merchant_orders/${orderId}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
+        const accessToken = this.configService.get<string>(
+          'mercadoPago.accessToken',
+        );
+        const response = await fetch(
+          `https://api.mercadopago.com/merchant_orders/${orderId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
           },
-        });
+        );
         const orderInfo = await response.json();
         const preferenceId = orderInfo?.preference_id;
         if (preferenceId) {
-          const payment = await this.paymentRepository.findOne({ where: { mp_preference_id: String(preferenceId) } });
+          const payment = await this.paymentRepository.findOne({
+            where: { mp_preference_id: String(preferenceId) },
+          });
           if (payment) {
             payment.mp_order_id = orderId;
             await this.paymentRepository.save(payment);
@@ -164,7 +235,10 @@ export class PaymentsService {
     } else if (data?.resource) {
       if (/^\d+$/.test(data.resource)) {
         paymentId = data.resource;
-      } else if (typeof data.resource === 'string' && data.resource.includes('/payments/')) {
+      } else if (
+        typeof data.resource === 'string' &&
+        data.resource.includes('/payments/')
+      ) {
         paymentId = data.resource.split('/payments/')[1];
       }
     } else if (data?.id) {
@@ -179,21 +253,31 @@ export class PaymentsService {
       // Obtiene el order.id (merchant order) del pago
       const orderId = paymentInfo.order?.id;
       if (!orderId) {
-        return { received: false, message: 'No order ID found in payment info' };
+        return {
+          received: false,
+          message: 'No order ID found in payment info',
+        };
       }
       // Busca el registro de pago por mp_order_id
-      let payment = await this.paymentRepository.findOne({ where: { mp_order_id: String(orderId) } });
+      let payment = await this.paymentRepository.findOne({
+        where: { mp_order_id: String(orderId) },
+      });
       if (!payment) {
         return { received: false, message: 'Payment not found in database' };
       }
       // Actualiza el estado, el ID de pago y la fecha de pago en la base de datos
       payment.status = paymentInfo.status ?? 'unknown';
       payment.mp_payment_id = String(paymentId);
-      payment.payment_date = paymentInfo.date_approved ? new Date(paymentInfo.date_approved) : new Date();
+      payment.payment_date = paymentInfo.date_approved
+        ? new Date(paymentInfo.date_approved)
+        : new Date();
       await this.paymentRepository.save(payment);
       return { received: true };
     } catch (error) {
-      return { received: false, message: 'Error processing Mercado Pago webhook' };
+      return {
+        received: false,
+        message: 'Error processing Mercado Pago webhook',
+      };
     }
   }
 }

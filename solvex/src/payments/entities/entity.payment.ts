@@ -28,6 +28,12 @@ export class Payment {
   @Column({ type: 'varchar', length: 100, nullable: false })
   mp_preference_id: string;
 
+  @Column({ type: 'varchar', length: 200, nullable: false })
+  init_point: string;
+
+  @Column({ type: 'timestamp', nullable: false })
+  init_point_expiration_date: Date;
+
   @Column({ type: 'decimal', nullable: false })
   amount: number;
 
@@ -37,7 +43,11 @@ export class Payment {
   @Column({ type: 'varchar', length: 50, nullable: false })
   status: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', nullable: true })
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    nullable: true,
+  })
   payment_date: Date;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })

@@ -9,25 +9,25 @@ import {
 import { User } from 'src/users/entities/user.entity';
 import { Ticket } from 'src/tickets/entities/ticket.entity';
 
-@Entity({ name: 'notificaciones' })
+@Entity({ name: 'notifications' })
 export class Notification {
-  @PrimaryGeneratedColumn({ name: 'id_notificacion', type: 'int' })
+  @PrimaryGeneratedColumn({ name: 'id', type: 'int' })
   id: number;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'id_usuario' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @ManyToOne(() => Ticket)
-  @JoinColumn({ name: 'id_ticket' })
+  @JoinColumn({ name: 'ticket_id' })
   ticket: Ticket;
 
-  @Column({ name: 'mensaje', type: 'varchar', length: 255, nullable: false })
+  @Column({ name: 'message', type: 'varchar', length: 255, nullable: false })
   message: string;
 
-  @Column({ name: 'leida', type: 'boolean', default: false })
+  @Column({ name: 'read', type: 'boolean', default: false })
   read: boolean;
 
-  @CreateDateColumn({ name: 'fecha_creacion' })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

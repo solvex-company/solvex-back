@@ -18,7 +18,11 @@ export class NotificationService {
   ) {}
 
   // Crea una notificación interna
-  async createNotification(user: User, ticket: Ticket, message: string): Promise<Notification> {
+  async createNotification(
+    user: User,
+    ticket: Ticket,
+    message: string,
+  ): Promise<Notification> {
     const notification = this.notificationRepository.create({
       user,
       ticket,
@@ -39,12 +43,13 @@ export class NotificationService {
 
   // Marca una notificación como leída
   async markAsRead(notificationId: number): Promise<Notification> {
-    const notification = await this.notificationRepository.findOne({ where: { id: notificationId } });
+    const notification = await this.notificationRepository.findOne({
+      where: { id: notificationId },
+    });
     if (notification) {
       notification.read = true;
       return this.notificationRepository.save(notification);
     }
     throw new Error('Notification not found');
   }
-
 }

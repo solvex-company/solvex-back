@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+} from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { Ticket } from 'src/tickets/entities/ticket.entity';
 
@@ -23,4 +30,4 @@ export class Notification {
 
   @CreateDateColumn({ name: 'fecha_creacion' })
   createdAt: Date;
-} 
+}

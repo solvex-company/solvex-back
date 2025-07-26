@@ -32,6 +32,7 @@ import { Area } from './tickets/entities/areas.entity';
 import mercadoPagoConfig from './config/mercado-pago.config';
 import { Ticket } from './tickets/entities/ticket.entity';
 import { TicketSeeder } from './seeders/areas.seeder copy';
+import { NotificationModule } from './notifications/mail/crons/crons.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { TicketSeeder } from './seeders/areas.seeder copy';
     }),
     TicketsModule,
     PaymentsModule,
+    NotificationModule,
   ],
   controllers: [],
   providers: [

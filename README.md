@@ -257,6 +257,8 @@ Access Token: APP_USR-5372043080270248-071710-1654fdad50fa9e4a557b269b264cfdef-2
 
 ### IMPORTANTE PARA QUE FUNCIONE HAY QUE USAR NGROK
 
+MP_WEBHOOK_URL: 'https://abcd1234.ngrok.io/payments/webhook'
+
 Uso de ngrok para webhooks de Mercado Pago
 Si desarrollas localmente, necesitas una URL pública para que Mercado Pago pueda enviar los webhooks a tu backend.
 Usa ngrok para exponer tu servidor local:
@@ -267,3 +269,37 @@ ngrok te dará una URL pública como https://abcd1234.ngrok.io.
 Usa esa URL en el campo notification_url al crear la preferencia de pago, por ejemplo:
 notification_url: 'https://abcd1234.ngrok.io/payments/webhook'
 Importante: Cada vez que reinicies ngrok, la URL cambiará. Actualiza el notification_url con la nueva URL.
+
+## Notificaciones Internas (CRON)
+
+### ¿Qué hace este módulo?
+
+- Genera notificaciones internas para el usuario admin cuando un usuario con rol "Soporte" (helper) no resuelve tickets en 48 horas, y luego cada 24 horas adicionales.
+- Permite a cualquier usuario autenticado (admin, soporte, empleado) consultar sus propias notificaciones y marcarlas como leídas.
+
+### ¿Cómo funciona el flujo?
+
+1. **CRON automático:**  
+   - Cada hora, el sistema revisa todos los usuarios con rol "Soporte".
+   - Si un helper no resolvió ningún ticket en las últimas 48h, se genera una notificación para el admin.
+   - Si sigue sin resolver, se genera una nueva notificación cada 24h adicional.
+   - El contador se reinicia si el helper resuelve un ticket.
+
+2. **Consulta de notificaciones:**  
+   - Cualquier usuario autenticado puede consultar sus notificaciones con `GET /notifications`.
+   - Solo el admin verá notificaciones sobre la inactividad de helpers.
+   - Soporte y empleado verán notificaciones si en el futuro se implementan para ellos.
+
+3. **Marcar como leída:**  
+   - Cualquier usuario autenticado puede marcar sus notificaciones como leídas con `PATCH /notifications/:id/read`.
+
+### ¿Cómo extender o modificar?
+
+- Para agregar notificaciones internas para otros roles (soporte, empleado), extender la lógica en el servicio de notificaciones.
+- Para cambiar la frecuencia o condiciones del CRON, modificar el método `notifyAdminHelpersInactive` en `crons.service.ts`.
+
+### Notas técnicas
+
+- El sistema usa `node-cron` para la tarea programada.
+- Los nombres de roles deben coincidir exactamente con los de la base de datos (`'Admin'`, `'Soporte'`, `'Empleado'`).
+- El endpoint `/notifications/test-cron` puede usarse para pruebas manuales (proteger o eliminar en producción)

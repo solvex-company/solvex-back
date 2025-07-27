@@ -26,7 +26,7 @@ async function bootstrap() {
   const allowedOrigins = [
     frontendUrl,
     'http://localhost:3000',
-    'https://solvex-front.vercel.app/login',
+    'https://solvex-front.vercel.app',
   ];
 
   app.enableCors({

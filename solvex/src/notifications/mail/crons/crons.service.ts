@@ -104,6 +104,7 @@ export class NotificationService implements OnModuleInit {
       // Calcular horas desde la última resolución
       const hoursSince =
         (now.getTime() - new Date(lastDate).getTime()) / (1000 * 60 * 60);
+      console.log(hoursSince);
       // Primer aviso a las 48h, luego cada 24h
       if (hoursSince >= 48) {
         const avisos = Math.floor((hoursSince - 48) / 24) + 1;

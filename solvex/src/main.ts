@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -22,11 +23,12 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const frontendUrl = configService.get('FRONTEND_URL');
+  const frontendUrls = configService.get('ALLOWED_ORIGINS').split(',');
   const allowedOrigins = [
-    frontendUrl,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    ...frontendUrls,
     'http://localhost:3000',
-    'https://solvex-front-git-main-solvex-companys-projects.vercel.app',
+    'https://solvex-front.vercel.app',
   ];
 
   app.enableCors({

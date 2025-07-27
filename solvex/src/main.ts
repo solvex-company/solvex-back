@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -7,7 +6,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NotReturnPasswordInterceptor } from './interceptor/not-return-password.interceptor';
 // import * as express from 'express'; // Importa express para usar su body parser
 import { ConfigService } from '@nestjs/config';
-import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,12 +22,11 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const frontendUrls = configService.get('ALLOWED_ORIGINS').split(',');
+  const frontendUrl = configService.get('FRONTEND_URL');
   const allowedOrigins = [
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    ...frontendUrls,
+    frontendUrl,
     'http://localhost:3000',
-    'https://solvex-front.vercel.app',
+    'https://solvex-front.vercel.app/login',
   ];
 
   app.enableCors({
@@ -44,9 +41,6 @@ async function bootstrap() {
     allowedHeaders: 'Content-Type,Authorization',
     credentials: true,
   });
-
-  app.use(json({ limit: '10mb' }));
-  app.use(urlencoded({ extended: true, limit: '10mb' }));
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api', app, document);

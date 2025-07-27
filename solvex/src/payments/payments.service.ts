@@ -17,6 +17,7 @@ import { Payment } from './entities/entity.payment';
 // import { Plan } from './entities/entity.plan';
 // import { Subscription } from './entities/entity.subscription';
 import fetch from 'node-fetch';
+import { MailService } from 'src/notifications/mail/mail.service';
 
 @Injectable()
 export class PaymentsService {
@@ -25,6 +26,7 @@ export class PaymentsService {
   private readonly paymentClient: MpPayment;
   private readonly preapproval: PreApproval;
   private readonly webHookUrl: string;
+  private readonly mailService: MailService;
 
   constructor(
     private readonly configService: ConfigService,
@@ -258,6 +260,7 @@ export class PaymentsService {
       // Busca el registro de pago por mp_order_id
       let payment = await this.paymentRepository.findOne({
         where: { mp_order_id: String(orderId) },
+        relations: ['User', 'user.credentials'],
       });
       if (!payment) {
         return { received: false, message: 'Payment not found in database' };
@@ -269,6 +272,29 @@ export class PaymentsService {
         ? new Date(paymentInfo.date_approved)
         : new Date();
       await this.paymentRepository.save(payment);
+
+      if (
+        payment.user?.credentials?.email &&
+        ['approved', 'rejected'].includes(payment.status)
+      ) {
+        await this.mailService.sendPaymentStatusEmail(
+          payment.user.credentials.email,
+          {
+            status: payment.status,
+            amount: payment.amount,
+            currency: payment.currency,
+            paymentId: payment.mp_payment_id,
+            date: payment.payment_date.toLocaleString('es-CO', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+          },
+        );
+      }
+
       return { received: true };
     } catch (error) {
       return {

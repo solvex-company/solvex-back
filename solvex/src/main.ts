@@ -26,7 +26,7 @@ async function bootstrap() {
   const allowedOrigins = [
     frontendUrl,
     'http://localhost:3000',
-    'https://solvex-front-git-main-solvex-companys-projects.vercel.app',
+    'https://solvex-front.vercel.app',
   ];
 
   app.enableCors({

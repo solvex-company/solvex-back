@@ -97,7 +97,7 @@ export class AuthController {
       const payload: JwtPayload = req.user;
 
       const token = this.authService.createJwtToken(payload);
-
+      console.log(this.configService.get<string>('FRONTEND_URL'));
       return res.redirect(
         `${this.configService.get<string>('FRONTEND_URL')!}/auth/callback?token=${token}`,
       );

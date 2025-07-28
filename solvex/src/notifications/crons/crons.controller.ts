@@ -38,6 +38,7 @@ export class NotificationController {
   @Get('test-cron')
   async testCron(@Request() req: any) {
     await this.notificationService.notifyAdminHelpersInactive();
+    await this.notificationService.notificationNewTickets24();
     return { message: 'CRON ejecutado manualmente' };
   }
 }

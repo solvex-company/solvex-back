@@ -74,11 +74,6 @@ export class AuthController {
     // Empty on purpose – just triggers the guard
   }
 
-  @Get('ruta')
-  getConsole() {
-    return this.configService.get<string>('FRONTEND_URL');
-  }
-
   @Get('google/redirect')
   @UseGuards(GoogleAuthGuard)
   @ApiOperation({

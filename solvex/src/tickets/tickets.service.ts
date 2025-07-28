@@ -317,13 +317,12 @@ export class TicketsService {
 
     const resolutionsFound: ResolutionTicket[] =
       await this.resolutionTicketRepository.find({
-        relations: ['id_helper', 'ticket'],
+        relations: ['ticket', 'id_helper'],
       });
 
     const resolutionOfTicket = resolutionsFound.filter(
-      (element) => element.ticket.id_ticket === idTicket,
+      (element) => element.ticket.id_ticket === ticketFound.id_ticket,
     );
-    console.log(resolutionOfTicket);
 
     if (resolutionOfTicket.length === 0)
       throw new BadRequestException(

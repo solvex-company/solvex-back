@@ -74,6 +74,11 @@ export class AuthController {
     // Empty on purpose – just triggers the guard
   }
 
+  @Get('ruta')
+  getConsole() {
+    return this.configService.get<string>('FRONTEND_URL');
+  }
+
   @Get('google/redirect')
   @UseGuards(GoogleAuthGuard)
   @ApiOperation({
@@ -97,7 +102,7 @@ export class AuthController {
       const payload: JwtPayload = req.user;
 
       const token = this.authService.createJwtToken(payload);
-
+      console.log(this.configService.get<string>('FRONTEND_URL'));
       return res.redirect(
         `${this.configService.get<string>('FRONTEND_URL')!}/auth/callback?token=${token}`,
       );

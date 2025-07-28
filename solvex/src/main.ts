@@ -1,13 +1,14 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NotReturnPasswordInterceptor } from './interceptor/not-return-password.interceptor';
-import * as express from 'express'; // Importa express para usar su body parser
+// import * as express from 'express'; // Importa express para usar su body parser
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
 
   app.useGlobalPipes(new ValidationPipe());
 
@@ -18,10 +19,26 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
 
+  const configService = app.get(ConfigService);
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const frontendUrl = configService.get('FRONTEND_URL');
+  const allowedOrigins = [
+    frontendUrl,
+    'http://localhost:3000',
+    'https://solvex-front.vercel.app',
+  ];
+
   app.enableCors({
-    origin: 'http://localhost:3000',
-    methods: 'GET,POST,PUT,DELETE',
-    allowedHeaders: 'Content-Type, Authorization',
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Origen no permitido por CORS'));
+      }
+    },
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Authorization',
     credentials: true,
   });
 

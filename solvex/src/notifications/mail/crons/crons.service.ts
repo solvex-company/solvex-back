@@ -28,10 +28,18 @@ export class NotificationService implements OnModuleInit {
     cron.schedule('0 * * * *', () => {
       this.notifyAdminHelpersInactive();
     });
+
+    cron.schedule('0 0 * * *', () => {
+      this.notificationNewTickets24();
+    });
   }
 
   // Crea una notificación interna
-  async createNotification(user: User, ticket: Ticket | undefined, message: string): Promise<Notification> {
+  async createNotification(
+    user: User,
+    ticket: Ticket | undefined,
+    message: string,
+  ): Promise<Notification> {
     const notification = this.notificationRepository.create({
       user,
       ticket,
@@ -52,7 +60,9 @@ export class NotificationService implements OnModuleInit {
 
   // Marca una notificación como leída
   async markAsRead(notificationId: number): Promise<Notification> {
-    const notification = await this.notificationRepository.findOne({ where: { id: notificationId } });
+    const notification = await this.notificationRepository.findOne({
+      where: { id: notificationId },
+    });
     if (notification) {
       notification.read = true;
       return this.notificationRepository.save(notification);
@@ -74,13 +84,21 @@ export class NotificationService implements OnModuleInit {
    */
   async notifyAdminHelpersInactive() {
     // Buscar el rol Soporte y Admin según la base de datos
-    const helperRole = await this.rolesRepository.findOne({ where: { role_name: 'Soporte' } });
+    const helperRole = await this.rolesRepository.findOne({
+      where: { role_name: 'Soporte' },
+    });
     if (!helperRole) return;
-    const helpers = await this.userRepository.find({ where: { role: helperRole } });
+    const helpers = await this.userRepository.find({
+      where: { role: helperRole },
+    });
 
-    const adminRole = await this.rolesRepository.findOne({ where: { role_name: 'Admin' } });
+    const adminRole = await this.rolesRepository.findOne({
+      where: { role_name: 'Admin' },
+    });
     if (!adminRole) return;
-    const admin = await this.userRepository.findOne({ where: { role: adminRole } });
+    const admin = await this.userRepository.findOne({
+      where: { role: adminRole },
+    });
     if (!admin) return;
 
     const now = new Date();
@@ -91,10 +109,13 @@ export class NotificationService implements OnModuleInit {
         where: { id_helper: helper },
         order: { date: 'DESC' },
       });
-      let lastDate = lastResolution ? lastResolution.date : helper['createdAt'] || helper['creation_date'] || new Date(0);
+      let lastDate = lastResolution
+        ? lastResolution.date
+        : helper['createdAt'] || helper['creation_date'] || new Date(0);
 
       // Calcular horas desde la última resolución
-      const hoursSince = (now.getTime() - new Date(lastDate).getTime()) / (1000 * 60 * 60);
+      const hoursSince =
+        (now.getTime() - new Date(lastDate).getTime()) / (1000 * 60 * 60);
       // Primer aviso a las 48h, luego cada 24h
       if (hoursSince >= 48) {
         const avisos = Math.floor((hoursSince - 48) / 24) + 1;
@@ -107,12 +128,30 @@ export class NotificationService implements OnModuleInit {
           },
         });
         if (!existing) {
-          await this.createNotification(
-            admin,
-            undefined,
-            message
-          );
+          await this.createNotification(admin, undefined, message);
         }
+      }
+    }
+  }
+
+  async notificationNewTickets24() {
+    const helpers: User[] = await this.userRepository.find();
+
+    const Tickets: Ticket[] = await this.ticketRepository.find();
+
+    const ticketsWihoOutResolution: Ticket[] = Tickets.filter(
+      (ticket) => !ticket.id_helper,
+    );
+
+    let totalTicketNew = 0;
+
+    totalTicketNew += ticketsWihoOutResolution.length;
+
+    if (totalTicketNew > 0) {
+      const message = `Tienes ${totalTicketNew} tickets sin resolver desde hace 24 horas`;
+
+      for (const helper of helpers) {
+        await this.createNotification(helper, undefined, message);
       }
     }
   }

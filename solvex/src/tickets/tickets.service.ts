@@ -306,6 +306,33 @@ export class TicketsService {
     return resolutionTicketFound;
   }
 
+  async getAllResolutionsOfTicket(idTicket: number) {
+    const ticketFound: Ticket | null = await this.ticketRepository.findOne({
+      where: { id_ticket: idTicket },
+      relations: ['resolutions'],
+    });
+
+    if (!ticketFound)
+      throw new NotFoundException(`ticket con id ${idTicket} not found`);
+
+    const resolutionsFound: ResolutionTicket[] =
+      await this.resolutionTicketRepository.find({
+        relations: ['id_helper', 'ticket'],
+      });
+
+    const resolutionOfTicket = resolutionsFound.filter(
+      (element) => element.ticket.id_ticket === idTicket,
+    );
+    console.log(resolutionOfTicket);
+
+    if (resolutionOfTicket.length === 0)
+      throw new BadRequestException(
+        `ticket con id: ${idTicket} no tiene resolution`,
+      );
+
+    return resolutionOfTicket;
+  }
+
   async getTicketsReport() {
     try {
       const [statusCounts, supportEmployees] = await Promise.all([

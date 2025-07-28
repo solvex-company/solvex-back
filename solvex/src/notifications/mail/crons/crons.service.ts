@@ -28,6 +28,10 @@ export class NotificationService implements OnModuleInit {
     cron.schedule('0 * * * *', () => {
       this.notifyAdminHelpersInactive();
     });
+
+    cron.schedule('0 0 * * *', () => {
+      this.notificationNewTickets24();
+    });
   }
 
   // Crea una notificación interna
@@ -104,7 +108,6 @@ export class NotificationService implements OnModuleInit {
       // Calcular horas desde la última resolución
       const hoursSince =
         (now.getTime() - new Date(lastDate).getTime()) / (1000 * 60 * 60);
-      console.log(hoursSince);
       // Primer aviso a las 48h, luego cada 24h
       if (hoursSince >= 48) {
         const avisos = Math.floor((hoursSince - 48) / 24) + 1;
@@ -119,6 +122,28 @@ export class NotificationService implements OnModuleInit {
         if (!existing) {
           await this.createNotification(admin, undefined, message);
         }
+      }
+    }
+  }
+
+  async notificationNewTickets24() {
+    const helpers: User[] = await this.userRepository.find();
+
+    const Tickets: Ticket[] = await this.ticketRepository.find();
+
+    const ticketsWihoOutResolution: Ticket[] = Tickets.filter(
+      (ticket) => !ticket.id_helper,
+    );
+
+    let totalTicketNew = 0;
+
+    totalTicketNew += ticketsWihoOutResolution.length;
+
+    if (totalTicketNew > 0) {
+      const message = `Tienes ${totalTicketNew} tickets sin resolver desde hace 24 horas`;
+
+      for (const helper of helpers) {
+        await this.createNotification(helper, undefined, message);
       }
     }
   }

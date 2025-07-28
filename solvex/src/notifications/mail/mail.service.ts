@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { configDotenv } from 'dotenv';
@@ -13,6 +14,7 @@ configDotenv({ path: '.env.development' });
 @Injectable()
 export class MailService {
   private transporter;
+  private readonly logger = new Logger(MailService.name);
 
   constructor(
     private readonly configService: ConfigService,
@@ -82,63 +84,85 @@ export class MailService {
     }
   }
 
-  async sendPaymentStatusEmail(
+  async sendPaymentCreationEmail(
     to: string,
     paymentInfo: {
-      status: string;
+      paymentUrl: string;
       amount: number;
       currency: string;
-      paymentId: string;
-      date: string;
+      expiration: string;
     },
   ) {
-    const statusMessages = {
-      approved: 'aprobado',
-      rejected: 'rechazado',
-      pending: 'pendiente',
-      refunded: 'reembolsado',
-      cancelled: 'cancelado',
-      unknown: 'en proceso',
-    };
-
-    const status = statusMessages[paymentInfo.status] || paymentInfo.status;
-    const subject = `Estado de tu pago: ${status}`;
+    const subject = 'Link de pago generado';
+    const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #2c3e50;">¡Listo para pagar!</h2>
+      <div style="background: #f9f9f9; padding: 20px; border-radius: 5px;">
+        <p>Hemos generado tu link de pago:</p>
+        <p><strong>Monto:</strong> ${paymentInfo.amount} ${paymentInfo.currency}</p>
+        <p><strong>Válido hasta:</strong> ${paymentInfo.expiration}</p>
+        <p style="text-align: center; margin-top: 20px;">
+          <a href="${paymentInfo.paymentUrl}" 
+             style="background: #3498db; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
+            Realizar pago ahora
+          </a>
+        </p>
+      </div>
+    </div>
+  `;
 
     const mailOptions = {
       from: this.configService.get('EMAIL_FROM'),
       to,
       subject,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2c3e50;">Estado de tu pago</h2>
-          <div style="background: #f9f9f9; padding: 20px; border-radius: 5px;">
-            <p><strong>ID de pago:</strong> ${paymentInfo.paymentId}</p>
-            <p><strong>Estado:</strong> ${status}</p>
-            <p><strong>Monto:</strong> ${paymentInfo.amount} ${paymentInfo.currency}</p>
-            <p><strong>Fecha:</strong> ${paymentInfo.date}</p>
-            ${
-              paymentInfo.status === 'approved'
-                ? '<p style="color: #27ae60;">¡Gracias por tu compra! Tu acceso ha sido activado.</p>'
-                : paymentInfo.status === 'rejected'
-                  ? '<p style="color: #e74c3c;">Por favor intenta con otro método de pago.</p>'
-                  : ''
-            }
-          </div>
-          <p style="text-align: center; margin-top: 20px;">
-            <a href="https://tudominio.com/mis-compras" 
-               style="background: #3498db; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
-              Ver mis compras
-            </a>
-          </p>
-        </div>
-      `,
+      html,
     };
 
     try {
       await this.transporter.sendMail(mailOptions);
     } catch (error) {
-      console.error('Error sending payment status email:', error);
-      throw new Error('Failed to send payment status email');
+      console.error('Error sending payment creation email:', error);
+      throw new Error('Failed to send payment creation email');
+    }
+  }
+  async sendPaymentApprovalEmail(
+    to: string,
+    data: {
+      amount: number;
+      currency: string;
+      paymentDate: string;
+      transactionId?: number;
+      paymentMethod?: string;
+    },
+  ): Promise<void> {
+    const mailOptions = {
+      from: this.configService.get('EMAIL_FROM'),
+      to,
+      subject: `✅ Pago aprobado - #${data.transactionId || ''}`,
+      html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <img src="https://tuempresa.com/logo.png" alt="Logo" width="150">
+        <h2 style="color: #4CAF50;">¡Gracias por tu compra!</h2>
+        <p>Hemos recibido tu pago exitosamente.</p>
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+          <p><strong>Monto:</strong> ${data.amount} ${data.currency}</p>
+          <p><strong>Fecha:</strong> ${data.paymentDate}</p>
+          <p><strong>Producto:</strong> Acceso al chat de soporte</p>
+        </div>
+        <p>¿Qué sigue? <a href="https://tuempresa.com/acceso">Haz clic aquí para acceder</a></p>
+      </div>
+    `,
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+      this.logger.log(`Correo de aprobación enviado a ${to}`);
+    } catch (error) {
+      this.logger.error(`Error enviando correo de aprobación a ${to}`, {
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
     }
   }
 }

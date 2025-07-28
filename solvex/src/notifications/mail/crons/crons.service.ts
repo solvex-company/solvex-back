@@ -60,6 +60,14 @@ export class NotificationService implements OnModuleInit {
     throw new Error('Notification not found');
   }
 
+  // Obtiene una notificación por ID con relaciones
+  async getNotificationById(notificationId: number): Promise<Notification | null> {
+    return this.notificationRepository.findOne({
+      where: { id: notificationId },
+      relations: ['user'],
+    });
+  }
+
   /**
    * Notifica al admin si un helper no resuelve tickets en 48h, y luego cada 24h.
    * El contador se reinicia si el helper resuelve un ticket.

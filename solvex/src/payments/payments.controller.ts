@@ -25,18 +25,6 @@ export class PaymentsController {
 
   @Post('webhook')
   async handleMercadoPagoWebhook(@Req() req: Request) {
-    console.log('Webhook recibido - Headers:', req.headers);
-    console.log('Webhook recibido - Body:', req.body);
-
-    try {
-      const result = await this.paymentsService.handleMercadoPagoWebhook(
-        req.body,
-      );
-      console.log('Resultado del webhook:', result);
-      return result;
-    } catch (error) {
-      console.error('Error procesando webhook:', error);
-      throw error;
-    }
+    return this.paymentsService.handleMercadoPagoWebhook(req.body);
   }
 }

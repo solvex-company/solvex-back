@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import {
   BadRequestException,
   Injectable,
@@ -22,7 +19,6 @@ import { Payment } from './entities/entity.payment';
 // import { Subscription } from './entities/entity.subscription';
 import fetch from 'node-fetch';
 import { MailService } from 'src/notifications/mail/mail.service';
-
 @Injectable()
 export class PaymentsService {
   private readonly client: MercadoPagoConfig;
@@ -218,7 +214,6 @@ export class PaymentsService {
 
   // Procesa los webhooks de Mercado Pago y actualiza el estado del pago en la base de datos
   async handleMercadoPagoWebhook(data: any): Promise<any> {
-    console.log('Webhook recibido:', JSON.stringify(data));
     // 1. Si el webhook es de tipo merchant_order, busca el mp_preference_id y actualiza solo el registro correcto
     if (data?.topic === 'merchant_order' || data?.type === 'merchant_order') {
       let orderId: string | undefined = undefined;
@@ -291,16 +286,14 @@ export class PaymentsService {
         };
       }
       // Busca el registro de pago por mp_order_id
-      const payment = await this.paymentRepository.findOne({
+      let payment = await this.paymentRepository.findOne({
         where: { mp_order_id: String(orderId) },
-        relations: ['User', 'credentials'],
       });
       if (!payment) {
         return { received: false, message: 'Payment not found in database' };
       }
 
       const previousStatus = payment.status;
-
       // Actualiza el estado, el ID de pago y la fecha de pago en la base de datos
       payment.status = paymentInfo.status ?? 'unknown';
       payment.mp_payment_id = String(paymentId);
@@ -310,14 +303,11 @@ export class PaymentsService {
       await this.paymentRepository.save(payment);
 
       if (payment.status === 'approved' && previousStatus !== 'approved') {
-        console.log('Pago aprobado, enviando correo...');
         const user = await this.paymentRepository.manager.findOne(User, {
           where: { id_user: payment.userId },
           relations: ['credentials'],
         });
-
         if (user?.credentials?.email) {
-          console.log('Enviando correo a:', user.credentials.email);
           await this.mailService
             .sendPaymentApprovalEmail(user.credentials.email, {
               amount: payment.amount,

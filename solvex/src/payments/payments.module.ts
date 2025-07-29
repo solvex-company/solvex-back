@@ -6,9 +6,10 @@ import { Payment } from './entities/entity.payment';
 // import { Plan } from './entities/entity.plan';
 // import { Subscription } from './entities/entity.subscription';
 import { User } from 'src/users/entities/user.entity';
+import { MailModule } from 'src/notifications/mail/mail.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Payment, User])],
+  imports: [TypeOrmModule.forFeature([Payment, User]), MailModule],
   controllers: [PaymentsController],
   providers: [PaymentsService],
 })

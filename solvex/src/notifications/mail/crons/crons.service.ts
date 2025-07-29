@@ -7,6 +7,7 @@ import { Ticket } from 'src/tickets/entities/ticket.entity';
 import { ResolutionTicket } from 'src/tickets/entities/resolutionsTicket';
 import { Roles } from 'src/users/entities/Roles.entity';
 import * as cron from 'node-cron';
+import { LessThan } from 'typeorm';
 
 @Injectable()
 export class NotificationService implements OnModuleInit {
@@ -51,11 +52,13 @@ export class NotificationService implements OnModuleInit {
 
   // Obtiene todas las notificaciones de un usuario
   async getUserNotifications(userId: string): Promise<Notification[]> {
-    return this.notificationRepository.find({
-      where: { user: { id_user: userId } },
-      relations: ['user', 'ticket'],
-      order: { createdAt: 'DESC' },
-    });
+    return this.notificationRepository
+      .createQueryBuilder('notification')
+      .leftJoinAndSelect('notification.user', 'user')
+      .leftJoinAndSelect('notification.ticket', 'ticket')
+      .where('user.id_user = :userId', { userId })
+      .orderBy('notification.createdAt', 'DESC')
+      .getMany();
   }
 
   // Marca una notificación como leída
@@ -111,7 +114,7 @@ export class NotificationService implements OnModuleInit {
       });
       let lastDate = lastResolution
         ? lastResolution.date
-        : helper['createdAt'] || helper['creation_date'] || new Date(0);
+        : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 días atrás como fallback
 
       // Calcular horas desde la última resolución
       const hoursSince =
@@ -135,23 +138,40 @@ export class NotificationService implements OnModuleInit {
   }
 
   async notificationNewTickets24() {
-    const helpers: User[] = await this.userRepository.find();
+    // Solo obtener helpers, no todos los usuarios
+    const helperRole = await this.rolesRepository.findOne({
+      where: { role_name: 'Soporte' },
+    });
+    if (!helperRole) return;
+    
+    const helpers = await this.userRepository.find({
+      where: { role: helperRole },
+    });
 
-    const Tickets: Ticket[] = await this.ticketRepository.find();
+    // Filtrar tickets con más de 24 horas y sin resolver
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const tickets = await this.ticketRepository.find({
+      where: {
+        id_helper: null as any, // Sin resolver
+        creation_date: LessThan(twentyFourHoursAgo) // Más de 24 horas
+      }
+    });
 
-    const ticketsWihoOutResolution: Ticket[] = Tickets.filter(
-      (ticket) => !ticket.id_helper,
-    );
-
-    let totalTicketNew = 0;
-
-    totalTicketNew += ticketsWihoOutResolution.length;
-
-    if (totalTicketNew > 0) {
-      const message = `Tienes ${totalTicketNew} tickets sin resolver desde hace 24 horas`;
-
+    if (tickets.length > 0) {
+      const message = `Tienes ${tickets.length} tickets sin resolver desde hace 24 horas`;
+      
       for (const helper of helpers) {
-        await this.createNotification(helper, undefined, message);
+        // Verificar si ya existe una notificación igual para este helper
+        const existing = await this.notificationRepository.findOne({
+          where: {
+            user: helper,
+            ticket: undefined,
+            message,
+          },
+        });
+        if (!existing) {
+          await this.createNotification(helper, undefined, message);
+        }
       }
     }
   }

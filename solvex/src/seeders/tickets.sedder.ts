@@ -89,16 +89,6 @@ export class TicketEmployeeSedder {
   }
 
   async seed() {
-    await this.ticketSeeder({
-      id_ticket: 2,
-      title: 'Fallo en el sistema de reportes',
-      description:
-        'El sistema de generación de reportes muestra error 500 al intentar exportar a PDF',
-      statusName: 'pending',
-      employeeEmail: 'robert.miller@solvex.com',
-      areaName: 'Tecnología',
-    });
-
     // Ticket para Recursos Humanos
     await this.ticketSeeder({
       id_ticket: 3,

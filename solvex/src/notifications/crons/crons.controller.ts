@@ -34,9 +34,13 @@ export class NotificationController {
   @Patch(':id/read')
   async markAsRead(@Request() req: any, @Param('id') id: string) {
     // Validar que la notificación pertenece al usuario autenticado
-    const notification = await this.notificationService.getNotificationById(Number(id));
+    const notification = await this.notificationService.getNotificationById(
+      Number(id),
+    );
     if (!notification || notification.user.id_user !== req.user.id_user) {
-      throw new ForbiddenException('No tienes permisos para marcar esta notificación como leída');
+      throw new ForbiddenException(
+        'No tienes permisos para marcar esta notificación como leída',
+      );
     }
     return this.notificationService.markAsRead(Number(id));
   }

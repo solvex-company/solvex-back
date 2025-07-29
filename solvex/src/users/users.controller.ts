@@ -83,7 +83,6 @@ export class UsersController {
   @UseGuards(AuthGuard)
   async isPasswordNull(@Req() req: JwtRequest): Promise<boolean> {
     const userId: string = req.user.id_user;
-    console.log(userId);
     return await this.usersService.isPasswordNull(userId);
   }
 }

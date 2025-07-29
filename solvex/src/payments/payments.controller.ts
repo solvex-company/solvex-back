@@ -10,7 +10,7 @@ export class PaymentsController {
   @Get('checkout')
   @UseGuards(AuthGuard)
   async startMercadoPagoCheckout(@Req() req: JwtRequest) {
-    const userId: string = req.user.id;
+    const userId: string = req.user.id_user;
     const checkoutInfo =
       await this.paymentsService.createMercadoPagoPreference(userId);
     return checkoutInfo;

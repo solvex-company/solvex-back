@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { Roles } from './entities/Roles.entity';
+import { use } from 'passport';
 
 @Injectable()
 export class UsersService {
@@ -25,6 +26,20 @@ export class UsersService {
     });
     if (!user) throw new NotFoundException('User not found');
     return user;
+  }
+
+  async isPasswordNull(userId: string) {
+    const user = await this.usersRepository.findOne({
+      where: { id_user: userId },
+      relations: ['credentials'],
+    });
+    if (!user) throw new NotFoundException('User not found');
+    console.log('Expected ID:', userId);
+    console.log('Returned ID:', user.id_user);
+    console.log(user.credentials.email);
+    console.log(user.credentials.password);
+    if (user.credentials.password) return false;
+    return true;
   }
 
   async getUserById(userId: string): Promise<User> {

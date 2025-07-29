@@ -108,7 +108,7 @@ export class AuthService {
     if (!passwordMatch) throw new BadRequestException('Incorrect credentials');
 
     const payload = {
-      id: findUser.user.id_user,
+      id_user: findUser.user.id_user,
       email: findUser.email,
       id_role: findUser.user.role.id_role,
     };
@@ -131,7 +131,7 @@ export class AuthService {
 
     if (user) {
       return {
-        id: user.user.id_user,
+        id_user: user.user.id_user,
         email: user.email,
         id_role: user.user.role.id_role,
       };

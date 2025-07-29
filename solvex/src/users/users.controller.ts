@@ -42,7 +42,7 @@ export class UsersController {
     },
   })
   getOwnUserData(@Req() req: JwtRequest): Promise<User> {
-    const userId: string = req.user.id;
+    const userId: string = req.user.id_user;
     return this.usersService.getOwnUserData(userId);
   }
 

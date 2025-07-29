@@ -182,16 +182,24 @@ export class AuthService {
 
     if (!credentialFound) throw new NotFoundException('credentials not found');
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    const compareOldPassword: boolean = await bcrypt.compare(
-      changePassworDto.oldPassword,
-      credentialFound.password,
-    );
+    if (
+      credentialFound.password !== null &&
+      changePassworDto.oldPassword === null
+    ) {
+      throw new BadRequestException('old password cant be null');
+    }
 
-    if (!compareOldPassword)
-      throw new BadRequestException('old password does not match');
+    if (credentialFound.password !== null) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      const compareOldPassword: boolean = await bcrypt.compare(
+        changePassworDto.oldPassword,
+        credentialFound.password,
+      );
+      if (!compareOldPassword)
+        throw new BadRequestException('old password does not match');
+    }
 
-    if (changePassworDto.newPassword2 !== changePassworDto.newPassword2)
+    if (changePassworDto.newPassword !== changePassworDto.newPassword2)
       throw new BadRequestException('new passwords do not match');
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call

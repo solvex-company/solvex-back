@@ -39,7 +39,7 @@ export class TicketSeeder {
       console.warn('⚠️ Faltan dependencias para crear el ticket de ejemplo');
       return;
     }
-    
+
     await this.ticketRepository.save(
       this.ticketRepository.create({
         title: 'Problema inicial con la impresora',

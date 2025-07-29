@@ -33,6 +33,7 @@ import mercadoPagoConfig from './config/mercado-pago.config';
 import { Ticket } from './tickets/entities/ticket.entity';
 import { TicketSeeder } from './seeders/areas.seeder copy';
 import { NotificationModule } from './notifications/mail/crons/crons.module';
+import { TicketEmployeeSedder } from './seeders/tickets.sedder';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { NotificationModule } from './notifications/mail/crons/crons.module';
     //PlansSeeder,
     AreaSeeder,
     TicketSeeder,
+    TicketEmployeeSedder,
   ],
 })
 export class AppModule implements OnApplicationBootstrap, NestModule {
@@ -88,6 +90,7 @@ export class AppModule implements OnApplicationBootstrap, NestModule {
     //private readonly plansSeeder: PlansSeeder,
     private readonly AreaSeeder: AreaSeeder,
     private readonly ticketSeeder: TicketSeeder,
+    private readonly ticketEmployeeSeeder: TicketEmployeeSedder,
   ) {}
 
   configure(consumer: MiddlewareConsumer) {
@@ -102,5 +105,6 @@ export class AppModule implements OnApplicationBootstrap, NestModule {
     //await this.plansSeeder.seed();
     await this.userSeeder.seed();
     await this.ticketSeeder.seed();
+    await this.ticketEmployeeSeeder.seed();
   }
 }

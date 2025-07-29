@@ -6,6 +6,8 @@ import {
   UseGuards,
   Request,
   ForbiddenException,
+  Body,
+  Post,
 } from '@nestjs/common';
 import { NotificationService } from './crons.service';
 import { AuthGuard } from 'src/auth/auth.guard';
@@ -46,5 +48,11 @@ export class NotificationController {
     await this.notificationService.notifyAdminHelpersInactive();
     await this.notificationService.notificationNewTickets24();
     return { message: 'CRON ejecutado manualmente' };
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('notify-by-role')
+  async notifyByRole(@Body() body: { role: string; message: string }) {
+    return this.notificationService.notifyUsersByRole(body.role, body.message);
   }
 }

@@ -7,7 +7,7 @@ import { Ticket } from 'src/tickets/entities/ticket.entity';
 import { ResolutionTicket } from 'src/tickets/entities/resolutionsTicket';
 import { Roles } from 'src/users/entities/Roles.entity';
 import * as cron from 'node-cron';
-import { LessThan } from 'typeorm';
+import { LessThan, IsNull } from 'typeorm';
 
 @Injectable()
 export class NotificationService implements OnModuleInit {
@@ -87,22 +87,14 @@ export class NotificationService implements OnModuleInit {
    */
   async notifyAdminHelpersInactive() {
     // Buscar el rol Soporte y Admin según la base de datos
-    const helperRole = await this.rolesRepository.findOne({
-      where: { role_name: 'Soporte' },
-    });
+    const helperRole = await this.rolesRepository.findOne({ where: { role_name: 'Soporte' } });
     if (!helperRole) return;
-    const helpers = await this.userRepository.find({
-      where: { role: helperRole },
-    });
+    const helpers = await this.userRepository.find({ where: { role: { id_role: helperRole.id_role } } });
 
-    const adminRole = await this.rolesRepository.findOne({
-      where: { role_name: 'Admin' },
-    });
+    const adminRole = await this.rolesRepository.findOne({ where: { role_name: 'Admin' } });
     if (!adminRole) return;
-    const admin = await this.userRepository.findOne({
-      where: { role: adminRole },
-    });
-    if (!admin) return;
+    const admins = await this.userRepository.find({ where: { role: { id_role: adminRole.id_role } } });
+    if (!admins.length) return;
 
     const now = new Date();
 
@@ -123,56 +115,66 @@ export class NotificationService implements OnModuleInit {
       if (hoursSince >= 48) {
         const avisos = Math.floor((hoursSince - 48) / 24) + 1;
         const message = `El helper ${helper.name} ${helper.lastname} no ha resuelto tickets en ${48 + (avisos - 1) * 24}hs`;
-        const existing = await this.notificationRepository.findOne({
-          where: {
-            user: admin,
-            ticket: undefined,
-            message,
-          },
-        });
-        if (!existing) {
-          await this.createNotification(admin, undefined, message);
+        for (const admin of admins) {
+          const existing = await this.notificationRepository.findOne({
+            where: {
+              user: admin,
+              ticket: undefined,
+              message,
+            },
+          });
+          if (!existing) {
+            await this.createNotification(admin, undefined, message);
+          }
         }
       }
     }
   }
 
   async notificationNewTickets24() {
-    // Solo obtener helpers, no todos los usuarios
-    const helperRole = await this.rolesRepository.findOne({
-      where: { role_name: 'Soporte' },
-    });
+    const helperRole = await this.rolesRepository.findOne({ where: { role_name: 'Soporte' } });
     if (!helperRole) return;
-    
-    const helpers = await this.userRepository.find({
-      where: { role: helperRole },
-    });
+    const helpers = await this.userRepository.find({ where: { role: { id_role: helperRole.id_role } } });
 
-    // Filtrar tickets con más de 24 horas y sin resolver
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const tickets = await this.ticketRepository.find({
       where: {
-        id_helper: null as any, // Sin resolver
-        creation_date: LessThan(twentyFourHoursAgo) // Más de 24 horas
+        id_helper: IsNull(),
+        creation_date: LessThan(twentyFourHoursAgo)
       }
     });
 
     if (tickets.length > 0) {
       const message = `Tienes ${tickets.length} tickets sin resolver desde hace 24 horas`;
-      
       for (const helper of helpers) {
-        // Verificar si ya existe una notificación igual para este helper
         const existing = await this.notificationRepository.findOne({
-          where: {
-            user: helper,
-            ticket: undefined,
-            message,
-          },
+          where: { user: helper, message, ticket: undefined }
         });
         if (!existing) {
           await this.createNotification(helper, undefined, message);
         }
       }
     }
+  }
+
+  /**
+   * Envía una notificación personalizada a todos los usuarios de un rol específico.
+   * Evita notificaciones duplicadas (mismo usuario, mensaje y sin ticket asociado).
+   */
+  async notifyUsersByRole(roleName: string, message: string) {
+    const role = await this.rolesRepository.findOne({ where: { role_name: roleName } });
+    if (!role) throw new Error('Role not found');
+    const users = await this.userRepository.find({ where: { role } });
+    let notified = 0;
+    for (const user of users) {
+      const existing = await this.notificationRepository.findOne({
+        where: { user, message, ticket: undefined },
+      });
+      if (!existing) {
+        await this.createNotification(user, undefined, message);
+        notified++;
+      }
+    }
+    return { notified };
   }
 }

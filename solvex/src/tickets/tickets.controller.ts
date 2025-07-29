@@ -89,6 +89,14 @@ export class TicketsController {
     return this.ticketsService.getResolutionTicketById(idResolution);
   }
 
+  @ApiBearerAuth()
+  @Get('resolutionTickets/:idTicket')
+  @Roles(Role.EMPLOYEE)
+  @UseGuards(AuthGuard, RolesGuard)
+  getAllResolutionsOfTicket(@Param('idTicket') idTicket: number) {
+    return this.ticketsService.getAllResolutionsOfTicket(idTicket);
+  }
+
   @Get('report/summary')
   @Roles(Role.ADMIN)
   @UseGuards(AuthGuard, RolesGuard)

@@ -55,11 +55,11 @@ export class TicketsService {
       }
 
       const userFound = await this.userRepository.findOne({
-        where: { id_user: user.id },
+        where: { id_user: user.id_user },
       });
 
       if (!userFound) {
-        throw new NotFoundException(`User with ID ${user.id} not found`);
+        throw new NotFoundException(`User with ID ${user.id_user} not found`);
       }
 
       const defaultStatus = await this.statusRepository.findOne({
@@ -108,7 +108,7 @@ export class TicketsService {
           area: areaFound,
           creation_date: new Date(),
         });
-        this.logger.log(`ID EMPLEADO: ${user.id}`);
+        this.logger.log(`ID EMPLEADO: ${user.id_user}`);
 
         const savedTicket = await this.ticketRepository.save(newTicket);
         this.logger.log(
@@ -141,11 +141,11 @@ export class TicketsService {
         error instanceof NotFoundException ||
         error instanceof BadRequestException
       ) {
-        this.logger.log(`ID EMPLEADO: ${user.id}`);
+        this.logger.log(`ID EMPLEADO: ${user.id_user}`);
         throw error;
       }
 
-      this.logger.log(`ID EMPLEADO: ${user.id}`);
+      this.logger.log(`ID EMPLEADO: ${user.id_user}`);
       throw new InternalServerErrorException('Failed to create ticket');
     }
   }

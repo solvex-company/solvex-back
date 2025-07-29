@@ -159,23 +159,50 @@ export class TicketsService {
 
       if (!creator || !creator.credentials) {
         this.logger.warn(
-          `Dont found credentials of user: ${ticket.id_empleado.id_user}`,
+          `No se encontraron credenciales para el usuario: ${ticket.id_empleado.id_user}`,
         );
         return;
       }
 
+      const areaWithDetails = await this.areaRepository.findOne({
+        where: { id_area: ticket.area.id_area },
+      });
+
+      if (!areaWithDetails) {
+        this.logger.warn(
+          `No se encontró información del área para el ticket: ${ticket.id_ticket}`,
+        );
+        return;
+      }
+
+      const emailData = {
+        id: ticket.id_ticket,
+        title: ticket.title,
+        description: ticket.description,
+        area: areaWithDetails.name,
+        date: ticket.creation_date.toLocaleString('es-CO', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+      };
+
       await this.mailService.sendTicketCreationEmail(
         creator.credentials.email,
-        {
-          id: ticket.id_ticket,
-          title: ticket.title,
-          description: ticket.description,
-          area: ticket.area.name,
-          date: ticket.creation_date.toLocaleString(),
-        },
+        emailData,
       );
-    } catch {
-      this.logger.error('error to sending email');
+
+      this.logger.log(
+        `Notificación de ticket creado enviada a ${creator.credentials.email}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        'Error al enviar notificación de creación de ticket',
+        error.stack,
+      );
     }
   }
 
@@ -253,6 +280,7 @@ export class TicketsService {
 
     const ticketFound: Ticket | null = await this.ticketRepository.findOne({
       where: { id_ticket: resolutionTicketDto.id_ticket },
+      relations: ['id_empleado', 'id_empleado.credentials', 'id_status'],
     });
 
     if (!ticketFound)
@@ -290,7 +318,47 @@ export class TicketsService {
 
     await this.resolutionTicketRepository.save(newResolutionTicket);
 
+    await this.sendTicketUpdateNotification(
+      ticketFound,
+      resolutionTicketDto.response,
+      credentialFound.user,
+    );
+
     return newResolutionTicket;
+  }
+
+  private async sendTicketUpdateNotification(
+    ticket: Ticket,
+    response: string,
+    helper: User,
+  ) {
+    try {
+      const creatorEmail = ticket.id_empleado.credentials?.email;
+      if (!creatorEmail) {
+        this.logger.warn(
+          `No email found for user ${ticket.id_empleado.id_user}`,
+        );
+        return;
+      }
+
+      await this.mailService.sendTicketUpdateEmail(creatorEmail, {
+        id: ticket.id_ticket,
+        title: ticket.title,
+        status: ticket.id_status.name,
+        response,
+        helper: `${helper.name} ${helper.lastname}`,
+        date: new Date().toLocaleString('es-CO', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+      });
+    } catch (error) {
+      this.logger.error('Error sending update notification', error.stack);
+    }
   }
 
   async getResolutionTicketById(idResolution: number) {
@@ -317,13 +385,12 @@ export class TicketsService {
 
     const resolutionsFound: ResolutionTicket[] =
       await this.resolutionTicketRepository.find({
-        relations: ['id_helper', 'ticket'],
+        relations: ['ticket', 'id_helper'],
       });
 
     const resolutionOfTicket = resolutionsFound.filter(
-      (element) => element.ticket.id_ticket === idTicket,
+      (element) => element.ticket.id_ticket === ticketFound.id_ticket,
     );
-    console.log(resolutionOfTicket);
 
     if (resolutionOfTicket.length === 0)
       throw new BadRequestException(

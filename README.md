@@ -45,9 +45,10 @@ Recordar iniciar sesion con la cuenta de solvex:
 
 - Importante: Crear .env.development al nivel de la carpeta principal solvex y crear primero la base de datos en postgres
 
-Para backend:
+Para mercadopago:
 
 - MP_ACCESS_TOKEN='Aqui va el access token de MercadoPago'
+- MP_WEBHOOK_URL='Aqui va el webhook URL de MercadoPago'
 
 ### Ejemplo consumo de ruta register
 

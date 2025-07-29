@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { TicketsService } from './tickets.service';
 import { TicketsController } from './tickets.controller';
 import { Ticket } from './entities/ticket.entity';
-import { User } from 'src/users/entities/user.entity';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from '../users/entities/user.entity';
 import { TicketStatus } from './entities/statusTickets.entity';
-import { FileUploadModule } from 'src/file-upload/file-upload.module';
+import { FileUploadModule } from '../file-upload/file-upload.module';
 import { Area } from './entities/areas.entity';
 import { ResolutionTicket } from './entities/resolutionsTicket';
-import { Credentials } from 'src/users/entities/Credentials.entity';
-import { MailService } from 'src/notifications/mail/mail.service';
+import { Credentials } from '../users/entities/Credentials.entity';
+import { MailModule } from '../notifications/mail/mail.module';
 
 @Module({
   imports: [
@@ -22,8 +22,9 @@ import { MailService } from 'src/notifications/mail/mail.service';
       Credentials,
     ]),
     FileUploadModule,
+    MailModule,
   ],
   controllers: [TicketsController],
-  providers: [TicketsService, MailService],
+  providers: [TicketsService],
 })
 export class TicketsModule {}

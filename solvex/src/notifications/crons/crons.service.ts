@@ -7,6 +7,7 @@ import { Ticket } from 'src/tickets/entities/ticket.entity';
 import { ResolutionTicket } from 'src/tickets/entities/resolutionsTicket';
 import { Roles } from 'src/users/entities/Roles.entity';
 import * as cron from 'node-cron';
+import { LessThan, IsNull } from 'typeorm';
 
 @Injectable()
 export class NotificationService implements OnModuleInit {
@@ -51,11 +52,13 @@ export class NotificationService implements OnModuleInit {
 
   // Obtiene todas las notificaciones de un usuario
   async getUserNotifications(userId: string): Promise<Notification[]> {
-    return this.notificationRepository.find({
-      where: { user: { id_user: userId } },
-      relations: ['user', 'ticket'],
-      order: { createdAt: 'DESC' },
-    });
+    return this.notificationRepository
+      .createQueryBuilder('notification')
+      .leftJoinAndSelect('notification.user', 'user')
+      .leftJoinAndSelect('notification.ticket', 'ticket')
+      .where('user.id_user = :userId', { userId })
+      .orderBy('notification.createdAt', 'DESC')
+      .getMany();
   }
 
   // Marca una notificación como leída
@@ -70,28 +73,28 @@ export class NotificationService implements OnModuleInit {
     throw new Error('Notification not found');
   }
 
+  // Obtiene una notificación por ID con relaciones
+  async getNotificationById(notificationId: number): Promise<Notification | null> {
+    return this.notificationRepository.findOne({
+      where: { id: notificationId },
+      relations: ['user'],
+    });
+  }
+
   /**
    * Notifica al admin si un helper no resuelve tickets en 48h, y luego cada 24h.
    * El contador se reinicia si el helper resuelve un ticket.
    */
   async notifyAdminHelpersInactive() {
     // Buscar el rol Soporte y Admin según la base de datos
-    const helperRole = await this.rolesRepository.findOne({
-      where: { role_name: 'Soporte' },
-    });
+    const helperRole = await this.rolesRepository.findOne({ where: { role_name: 'Soporte' } });
     if (!helperRole) return;
-    const helpers = await this.userRepository.find({
-      where: { role: helperRole },
-    });
+    const helpers = await this.userRepository.find({ where: { role: { id_role: helperRole.id_role } } });
 
-    const adminRole = await this.rolesRepository.findOne({
-      where: { role_name: 'Admin' },
-    });
+    const adminRole = await this.rolesRepository.findOne({ where: { role_name: 'Admin' } });
     if (!adminRole) return;
-    const admin = await this.userRepository.findOne({
-      where: { role: adminRole },
-    });
-    if (!admin) return;
+    const admins = await this.userRepository.find({ where: { role: { id_role: adminRole.id_role } } });
+    if (!admins.length) return;
 
     const now = new Date();
 
@@ -103,7 +106,7 @@ export class NotificationService implements OnModuleInit {
       });
       let lastDate = lastResolution
         ? lastResolution.date
-        : helper['createdAt'] || helper['creation_date'] || new Date(0);
+        : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 días atrás como fallback
 
       // Calcular horas desde la última resolución
       const hoursSince =
@@ -112,39 +115,66 @@ export class NotificationService implements OnModuleInit {
       if (hoursSince >= 48) {
         const avisos = Math.floor((hoursSince - 48) / 24) + 1;
         const message = `El helper ${helper.name} ${helper.lastname} no ha resuelto tickets en ${48 + (avisos - 1) * 24}hs`;
-        const existing = await this.notificationRepository.findOne({
-          where: {
-            user: admin,
-            ticket: undefined,
-            message,
-          },
-        });
-        if (!existing) {
-          await this.createNotification(admin, undefined, message);
+        for (const admin of admins) {
+          const existing = await this.notificationRepository.findOne({
+            where: {
+              user: admin,
+              ticket: undefined,
+              message,
+            },
+          });
+          if (!existing) {
+            await this.createNotification(admin, undefined, message);
+          }
         }
       }
     }
   }
 
   async notificationNewTickets24() {
-    const helpers: User[] = await this.userRepository.find();
+    const helperRole = await this.rolesRepository.findOne({ where: { role_name: 'Soporte' } });
+    if (!helperRole) return;
+    const helpers = await this.userRepository.find({ where: { role: { id_role: helperRole.id_role } } });
 
-    const Tickets: Ticket[] = await this.ticketRepository.find();
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const tickets = await this.ticketRepository.find({
+      where: {
+        id_helper: IsNull(),
+        creation_date: LessThan(twentyFourHoursAgo)
+      }
+    });
 
-    const ticketsWihoOutResolution: Ticket[] = Tickets.filter(
-      (ticket) => !ticket.id_helper,
-    );
-
-    let totalTicketNew = 0;
-
-    totalTicketNew += ticketsWihoOutResolution.length;
-
-    if (totalTicketNew > 0) {
-      const message = `Tienes ${totalTicketNew} tickets sin resolver desde hace 24 horas`;
-
+    if (tickets.length > 0) {
+      const message = `Tienes ${tickets.length} tickets sin resolver desde hace 24 horas`;
       for (const helper of helpers) {
-        await this.createNotification(helper, undefined, message);
+        const existing = await this.notificationRepository.findOne({
+          where: { user: helper, message, ticket: undefined }
+        });
+        if (!existing) {
+          await this.createNotification(helper, undefined, message);
+        }
       }
     }
+  }
+
+  /**
+   * Envía una notificación personalizada a todos los usuarios de un rol específico.
+   * Evita notificaciones duplicadas (mismo usuario, mensaje y sin ticket asociado).
+   */
+  async notifyUsersByRole(roleName: string, message: string) {
+    const role = await this.rolesRepository.findOne({ where: { role_name: roleName } });
+    if (!role) throw new Error('Role not found');
+    const users = await this.userRepository.find({ where: { role } });
+    let notified = 0;
+    for (const user of users) {
+      const existing = await this.notificationRepository.findOne({
+        where: { user, message, ticket: undefined },
+      });
+      if (!existing) {
+        await this.createNotification(user, undefined, message);
+        notified++;
+      }
+    }
+    return { notified };
   }
 }

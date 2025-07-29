@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { AuthGuard } from 'src/auth/auth.guard';
@@ -10,7 +12,7 @@ export class PaymentsController {
   @Get('checkout')
   @UseGuards(AuthGuard)
   async startMercadoPagoCheckout(@Req() req: JwtRequest) {
-    const userId: string = req.user.id;
+    const userId: string = req.user.id_user;
     const checkoutInfo =
       await this.paymentsService.createMercadoPagoPreference(userId);
     return checkoutInfo;

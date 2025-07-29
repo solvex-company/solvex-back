@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,7 +18,7 @@ import { Payment } from './entities/entity.payment';
 // import { Plan } from './entities/entity.plan';
 // import { Subscription } from './entities/entity.subscription';
 import fetch from 'node-fetch';
-
+import { MailService } from 'src/notifications/mail/mail.service';
 @Injectable()
 export class PaymentsService {
   private readonly client: MercadoPagoConfig;
@@ -25,9 +26,11 @@ export class PaymentsService {
   private readonly paymentClient: MpPayment;
   private readonly preapproval: PreApproval;
   private readonly webHookUrl: string;
+  private readonly logger = new Logger(MailService.name);
 
   constructor(
     private readonly configService: ConfigService,
+    private readonly mailService: MailService,
     @InjectRepository(Payment)
     private readonly paymentRepository: Repository<Payment>,
   ) {
@@ -136,6 +139,7 @@ export class PaymentsService {
       }
       const user = await this.paymentRepository.manager.findOne(User, {
         where: { id_user: userId },
+        relations: ['credentials'],
       });
       if (!user) {
         throw new Error('User not found when creating payment');
@@ -145,7 +149,7 @@ export class PaymentsService {
         init_point: init_point,
         init_point_expiration_date: new Date(Date.now() + 15 * 60 * 1000), // expires in 15 min
         amount: items[0].unit_price,
-        currency: items[0].currency_id,
+        currency: items[0].currency_id ?? 'USD',
         status: 'created',
         payment_date: null,
         mp_preference_date: new Date(),
@@ -154,6 +158,32 @@ export class PaymentsService {
       } as unknown as Payment);
 
       await this.paymentRepository.save(newPayment);
+
+      if (user.credentials?.email) {
+        try {
+          await this.mailService.sendPaymentCreationEmail(
+            user.credentials.email,
+            {
+              paymentUrl: init_point,
+              amount: items[0].unit_price,
+              currency: items[0].currency_id ?? 'USD',
+              expiration: expiresAt.toLocaleString('es-CO', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
+            },
+          );
+        } catch (error) {
+          this.logger.error('Error sending payment creation email', {
+            error: error.message,
+            stack: error.stack,
+            email: user.credentials.email,
+          });
+        }
+      }
       return { preferenceId: id, paymentUrl: init_point };
     } catch (error) {
       throw new InternalServerErrorException(
@@ -262,6 +292,8 @@ export class PaymentsService {
       if (!payment) {
         return { received: false, message: 'Payment not found in database' };
       }
+
+      const previousStatus = payment.status;
       // Actualiza el estado, el ID de pago y la fecha de pago en la base de datos
       payment.status = paymentInfo.status ?? 'unknown';
       payment.mp_payment_id = String(paymentId);
@@ -269,6 +301,32 @@ export class PaymentsService {
         ? new Date(paymentInfo.date_approved)
         : new Date();
       await this.paymentRepository.save(payment);
+
+      if (payment.status === 'approved' && previousStatus !== 'approved') {
+        const user = await this.paymentRepository.manager.findOne(User, {
+          where: { id_user: payment.userId },
+          relations: ['credentials'],
+        });
+        if (user?.credentials?.email) {
+          await this.mailService
+            .sendPaymentApprovalEmail(user.credentials.email, {
+              amount: payment.amount,
+              currency: payment.currency,
+              paymentDate: payment.payment_date.toLocaleString('es-CO', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
+            })
+            .catch((error) => {
+              console.error('Error completo al enviar:', error);
+              this.logger.error('Error sending payment approval email', error);
+            });
+        }
+      }
+
       return { received: true };
     } catch (error) {
       return {

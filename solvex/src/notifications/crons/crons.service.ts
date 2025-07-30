@@ -26,13 +26,25 @@ export class NotificationService implements OnModuleInit {
 
   // Ejecuta el cron cada hora para verificar inactividad de helpers
   onModuleInit() {
-    cron.schedule('0 * * * *', () => {
-      this.notifyAdminHelpersInactive();
-    });
+    cron.schedule(
+      '10 16 * * *',
+      () => {
+        this.notifyAdminHelpersInactive();
+      },
+      {
+        timezone: 'America/Argentina/Buenos_Aires',
+      },
+    );
 
-    cron.schedule('0 0 * * *', () => {
-      this.notificationNewTickets24();
-    });
+    cron.schedule(
+      '10 16 * * *',
+      () => {
+        this.notificationNewTickets24();
+      },
+      {
+        timezone: 'America/Argentina/Buenos_Aires',
+      },
+    );
   }
 
   // Crea una notificación interna
@@ -74,7 +86,9 @@ export class NotificationService implements OnModuleInit {
   }
 
   // Obtiene una notificación por ID con relaciones
-  async getNotificationById(notificationId: number): Promise<Notification | null> {
+  async getNotificationById(
+    notificationId: number,
+  ): Promise<Notification | null> {
     return this.notificationRepository.findOne({
       where: { id: notificationId },
       relations: ['user'],
@@ -87,13 +101,21 @@ export class NotificationService implements OnModuleInit {
    */
   async notifyAdminHelpersInactive() {
     // Buscar el rol Soporte y Admin según la base de datos
-    const helperRole = await this.rolesRepository.findOne({ where: { role_name: 'Soporte' } });
+    const helperRole = await this.rolesRepository.findOne({
+      where: { role_name: 'Soporte' },
+    });
     if (!helperRole) return;
-    const helpers = await this.userRepository.find({ where: { role: { id_role: helperRole.id_role } } });
+    const helpers = await this.userRepository.find({
+      where: { role: { id_role: helperRole.id_role } },
+    });
 
-    const adminRole = await this.rolesRepository.findOne({ where: { role_name: 'Admin' } });
+    const adminRole = await this.rolesRepository.findOne({
+      where: { role_name: 'Admin' },
+    });
     if (!adminRole) return;
-    const admins = await this.userRepository.find({ where: { role: { id_role: adminRole.id_role } } });
+    const admins = await this.userRepository.find({
+      where: { role: { id_role: adminRole.id_role } },
+    });
     if (!admins.length) return;
 
     const now = new Date();
@@ -132,23 +154,27 @@ export class NotificationService implements OnModuleInit {
   }
 
   async notificationNewTickets24() {
-    const helperRole = await this.rolesRepository.findOne({ where: { role_name: 'Soporte' } });
+    const helperRole = await this.rolesRepository.findOne({
+      where: { role_name: 'Soporte' },
+    });
     if (!helperRole) return;
-    const helpers = await this.userRepository.find({ where: { role: { id_role: helperRole.id_role } } });
+    const helpers = await this.userRepository.find({
+      where: { role: { id_role: helperRole.id_role } },
+    });
 
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const tickets = await this.ticketRepository.find({
       where: {
         id_helper: IsNull(),
-        creation_date: LessThan(twentyFourHoursAgo)
-      }
+        creation_date: LessThan(twentyFourHoursAgo),
+      },
     });
 
     if (tickets.length > 0) {
       const message = `Tienes ${tickets.length} tickets sin resolver desde hace 24 horas`;
       for (const helper of helpers) {
         const existing = await this.notificationRepository.findOne({
-          where: { user: helper, message, ticket: undefined }
+          where: { user: helper, message, ticket: undefined },
         });
         if (!existing) {
           await this.createNotification(helper, undefined, message);
@@ -162,7 +188,9 @@ export class NotificationService implements OnModuleInit {
    * Evita notificaciones duplicadas (mismo usuario, mensaje y sin ticket asociado).
    */
   async notifyUsersByRole(roleName: string, message: string) {
-    const role = await this.rolesRepository.findOne({ where: { role_name: roleName } });
+    const role = await this.rolesRepository.findOne({
+      where: { role_name: roleName },
+    });
     if (!role) throw new Error('Role not found');
     const users = await this.userRepository.find({ where: { role } });
     let notified = 0;

@@ -18,6 +18,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { GoogleProfile } from './interfaces/google-profile.interface';
 import { ChangePasswordDto } from 'src/auth/changePassword.dto';
+import { Payment } from 'src/payments/entities/entity.payment';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +27,8 @@ export class AuthService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Credentials)
     private readonly credentialsRepository: Repository<Credentials>,
+    @InjectRepository(Payment)
+    private readonly paymentRepository: Repository<Payment>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
@@ -107,10 +110,15 @@ export class AuthService {
     );
     if (!passwordMatch) throw new BadRequestException('Incorrect credentials');
 
+    const payment = await this.paymentRepository.findOne({
+      where: { userId: findUser.user.id_user, status: 'approved' },
+    });
+
     const payload = {
       id_user: findUser.user.id_user,
       email: findUser.email,
       id_role: findUser.user.role.id_role,
+      paymentApproved: !!payment,
     };
     const token = this.jwtService.sign(payload);
     return token;
@@ -129,11 +137,16 @@ export class AuthService {
       relations: ['user', 'user.typeId', 'user.role'],
     });
 
+    const paymentUser = await this.paymentRepository.findOne({
+      where: { userId: user?.user.id_user, status: 'approved' },
+    });
+
     if (user) {
       return {
         id_user: user.user.id_user,
         email: user.email,
         id_role: user.user.role.id_role,
+        paymentApproved: !!paymentUser,
       };
     }
 
@@ -155,10 +168,15 @@ export class AuthService {
 
     await this.credentialsRepository.save(credentials);
 
+    const savedUserPayment = await this.paymentRepository.findOne({
+      where: { userId: savedUser.id_user, status: 'approved' },
+    });
+
     return {
       id_user: savedUser.id_user,
       email: credentials.email,
       id_role: savedUser.role.id_role,
+      paymentApproved: !!savedUserPayment,
     };
   }
 
@@ -182,16 +200,24 @@ export class AuthService {
 
     if (!credentialFound) throw new NotFoundException('credentials not found');
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    const compareOldPassword: boolean = await bcrypt.compare(
-      changePassworDto.oldPassword,
-      credentialFound.password,
-    );
+    if (
+      credentialFound.password !== null &&
+      changePassworDto.oldPassword === null
+    ) {
+      throw new BadRequestException('old password cant be null');
+    }
 
-    if (!compareOldPassword)
-      throw new BadRequestException('old password does not match');
+    if (credentialFound.password !== null) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      const compareOldPassword: boolean = await bcrypt.compare(
+        changePassworDto.oldPassword,
+        credentialFound.password,
+      );
+      if (!compareOldPassword)
+        throw new BadRequestException('old password does not match');
+    }
 
-    if (changePassworDto.newPassword2 !== changePassworDto.newPassword2)
+    if (changePassworDto.newPassword !== changePassworDto.newPassword2)
       throw new BadRequestException('new passwords do not match');
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call

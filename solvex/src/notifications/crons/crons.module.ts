@@ -9,9 +9,17 @@ import { ResolutionTicket } from 'src/tickets/entities/resolutionsTicket';
 import { Roles } from 'src/users/entities/Roles.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Notification, Ticket, User, ResolutionTicket, Roles])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Notification,
+      Ticket,
+      User,
+      ResolutionTicket,
+      Roles,
+    ]),
+  ],
   providers: [NotificationService],
   exports: [NotificationService],
   controllers: [NotificationController],
 })
-export class NotificationModule {} 
+export class NotificationModule {}

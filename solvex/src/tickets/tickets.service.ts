@@ -447,8 +447,7 @@ export class TicketsService {
   private getStatusName(id: number): string {
     const statusMap = {
       1: 'Pendientes',
-      2: 'En Progreso',
-      3: 'Completados',
+      2: 'Completados',
     };
     return statusMap[id] || 'Desconocido';
   }

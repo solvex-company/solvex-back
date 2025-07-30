@@ -94,22 +94,7 @@ export class MailService {
     },
   ) {
     const subject = 'Link de pago generado';
-    const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #2c3e50;">¡Listo para pagar!</h2>
-      <div style="background: #f9f9f9; padding: 20px; border-radius: 5px;">
-        <p>Hemos generado tu link de pago:</p>
-        <p><strong>Monto:</strong> ${paymentInfo.amount} ${paymentInfo.currency}</p>
-        <p><strong>Válido hasta:</strong> ${paymentInfo.expiration}</p>
-        <p style="text-align: center; margin-top: 20px;">
-          <a href="${paymentInfo.paymentUrl}" 
-             style="background: #3498db; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
-            Realizar pago ahora
-          </a>
-        </p>
-      </div>
-    </div>
-  `;
+    const html = this.mailTemplates.getPaymentCreationTicket(paymentInfo);
 
     const mailOptions = {
       from: this.configService.get('EMAIL_FROM'),
@@ -135,23 +120,12 @@ export class MailService {
       paymentMethod?: string;
     },
   ): Promise<void> {
+    const html = this.mailTemplates.getPaymentApprovalEmail(data);
     const mailOptions = {
       from: this.configService.get('EMAIL_FROM'),
       to,
       subject: `✅ Pago aprobado - #${data.transactionId || ''}`,
-      html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <img src="https://tuempresa.com/logo.png" alt="Logo" width="150">
-        <h2 style="color: #4CAF50;">¡Gracias por tu compra!</h2>
-        <p>Hemos recibido tu pago exitosamente.</p>
-        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
-          <p><strong>Monto:</strong> ${data.amount} ${data.currency}</p>
-          <p><strong>Fecha:</strong> ${data.paymentDate}</p>
-          <p><strong>Producto:</strong> Acceso al chat de soporte</p>
-        </div>
-        <p>¿Qué sigue? <a href="https://tuempresa.com/acceso">Haz clic aquí para acceder</a></p>
-      </div>
-    `,
+      html,
     };
 
     try {

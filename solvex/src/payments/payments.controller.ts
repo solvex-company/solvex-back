@@ -27,4 +27,11 @@ export class PaymentsController {
   async handleMercadoPagoWebhook(@Req() req: Request) {
     return this.paymentsService.handleMercadoPagoWebhook(req.body);
   }
+
+  @Get('is-approved')
+  @UseGuards(AuthGuard)
+  async approvedPaymentToken(@Req() req: JwtRequest) {
+    const user: any = req.user;
+    return await this.paymentsService.approvedPaymentToken(user);
+  }
 }

@@ -4,11 +4,13 @@ import { Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { JwtRequest } from 'src/auth/interfaces/jwt-request.interface';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
+  @ApiBearerAuth()
   @Get('checkout')
   @UseGuards(AuthGuard)
   async startMercadoPagoCheckout(@Req() req: JwtRequest) {

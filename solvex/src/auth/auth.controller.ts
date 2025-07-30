@@ -15,7 +15,7 @@ import {
   Put,
   Param,
 } from '@nestjs/common';
-import { loginDto } from 'src/users/dto/user.dto';
+import { CreateUserDto, loginDto } from 'src/users/dto/user.dto';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './utils/GoogleAuthGuard';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
@@ -40,16 +40,15 @@ export class AuthController {
   ) {}
 
   @Post('signup')
-  create(@Body() userData: any) {
+  create(@Body() userData: CreateUserDto) {
     console.log(userData);
     const transformedData = {
       ...userData,
-      typeId: parseInt(userData.typeId, 10),
+      typeId: userData.typeId.toString(),
       identification_number: userData.identification_number.toString(),
-      phone: userData.phone.toString(),
     };
-    if (isNaN(transformedData.typeId)) {
-      throw new BadRequestException('typeId must be a valid number');
+    if (isNaN(parseInt(transformedData.typeId, 10))) {
+      throw new BadRequestException('typeId must be a valid number');
     }
 
     console.log(transformedData);
@@ -64,8 +63,16 @@ export class AuthController {
   @Get('google/login')
   @UseGuards(GoogleAuthGuard)
   @ApiOperation({
-    summary: 'Google OAuth Login',
-    description: 'Redirects to Google for authentication.',
+    summary: 'Autenticación con Google',
+    description: `
+    <b>Flujo de autenticación:</b>
+    <ol>
+      <li>El usuario es redirigido a Google para autenticarse</li>
+      <li>Google retorna al callback URL con el código</li>
+      <li>El servidor intercambia el código por tokens</li>
+    </ol>
+    <b>Nota:</b> Este endpoint no debe ser llamado directamente desde Swagger UI
+  `,
   })
   @ApiResponse({
     status: 204,

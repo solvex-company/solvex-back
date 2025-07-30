@@ -14,6 +14,9 @@ import { AuthGuard } from 'src/auth/auth.guard';
 // import { RolesGuard } from 'src/auth/roles.guard';
 // import { NotificationRolesGuard } from './notification-roles.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from 'src/decorators/roles.decorators';
+import { Role } from 'src/roles.enum';
+import { RolesGuard } from 'src/auth/roles.guard';
 // import { Roles } from 'src/decorators/roles.decorators';
 // import { Role } from 'src/roles.enum';
 
@@ -23,7 +26,8 @@ export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
   // Obtener notificaciones del usuario autenticado (protegido solo por AuthGuard)
-  @UseGuards(AuthGuard)
+  @Roles(Role.ADMIN, Role.HELPER)
+  @UseGuards(AuthGuard, RolesGuard)
   @Get()
   async getUserNotifications(@Request() req: any) {
     return this.notificationService.getUserNotifications(req.user.id_user);
@@ -54,6 +58,8 @@ export class NotificationController {
     return { message: 'CRON ejecutado manualmente' };
   }
 
+  @Roles(Role.ADMIN)
+  @UseGuards(AuthGuard, RolesGuard)
   @UseGuards(AuthGuard)
   @Post('notify-by-role')
   async notifyByRole(@Body() body: { role: string; message: string }) {

@@ -19,12 +19,13 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { TicketsService } from '../tickets/tickets.service';
 import { createTicketDto } from './dto/createTicket.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { Role } from 'src/roles.enum';
 import { Roles } from 'src/decorators/roles.decorators';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { resolutionTicketDto } from './dto/resolutionTicket.dto';
 
+@ApiBearerAuth()
 @Controller('tickets')
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
@@ -33,6 +34,41 @@ export class TicketsController {
   @Post('createTicket')
   @Roles(Role.EMPLOYEE)
   @UseGuards(AuthGuard, RolesGuard)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Create ticket with images',
+    schema: {
+      type: 'object',
+      properties: {
+        title: {
+          type: 'string',
+          example: 'Problema con la impresora',
+          description: 'Título del ticket',
+        },
+        description: {
+          type: 'string',
+          example: 'La impresora no responde y muestra luz roja',
+          description: 'Descripción detallada del problema',
+        },
+        id_area: {
+          type: 'number',
+          example: 1,
+          description: 'ID del área relacionada',
+        },
+        images: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+          maxItems: 3,
+          description: 'Sube hasta 3 imágenes del problema',
+          example: ['imagen1.jpg', 'imagen2.png'], // Esto es solo para documentación
+        },
+      },
+      required: ['title', 'description', 'id_area'],
+    },
+  })
   @UseInterceptors(FilesInterceptor('images', 3))
   async createTicket(
     @Request() req: any,

@@ -27,6 +27,8 @@ async function bootstrap() {
     frontendUrl,
     'http://localhost:3000',
     'https://solvex-front.vercel.app',
+    'https://solvex-2v25.onrender.com',
+    'http://localhost:4000',
   ];
 
   app.enableCors({

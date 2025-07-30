@@ -37,7 +37,7 @@ export class NotificationService implements OnModuleInit {
     );
 
     cron.schedule(
-      '10 16 * * *',
+      '48 19 * * *',
       () => {
         this.notificationNewTickets24();
       },

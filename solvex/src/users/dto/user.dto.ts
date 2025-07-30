@@ -68,7 +68,7 @@ export class CreateUserDto {
 
   @ApiProperty({
     description: 'identification num of the user',
-    example: '123456789',
+    example: '456267345',
   })
   @IsNotEmpty()
   identification_number: string;
@@ -78,7 +78,6 @@ export class CreateUserDto {
     example: '1234567890',
   })
   @IsNotEmpty()
-  @Matches(/^[0-9]+$/)
   phone: string;
 
   @ApiProperty({

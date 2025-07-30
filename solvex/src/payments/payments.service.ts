@@ -19,6 +19,7 @@ import { Payment } from './entities/entity.payment';
 // import { Subscription } from './entities/entity.subscription';
 import fetch from 'node-fetch';
 import { MailService } from 'src/notifications/mail/mail.service';
+import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class PaymentsService {
   private readonly client: MercadoPagoConfig;
@@ -33,6 +34,9 @@ export class PaymentsService {
     private readonly mailService: MailService,
     @InjectRepository(Payment)
     private readonly paymentRepository: Repository<Payment>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {
     const token = this.configService.get<string>('mercadoPago.accessToken')!;
     this.webHookUrl = this.configService.get<string>('mercadoPago.webHookUrl')!;
@@ -50,6 +54,28 @@ export class PaymentsService {
       where: { userId: userId, status: 'approved' },
     });
     return !!payment;
+  }
+
+  async approvedPaymentToken(user) {
+    const userExists = await this.userRepository.findOne({
+      where: { id_user: user.id_user },
+    });
+    if (!userExists) {
+      throw new Error('User not found');
+    }
+
+    const hasPaid = await this.userHasApprovedPayment(user.id_user);
+
+    const payload = {
+      id_user: user.id_user,
+      email: user.email,
+      id_role: user.id_role,
+      paymentApproved: !!hasPaid,
+    };
+
+    const token = this.jwtService.sign(payload);
+
+    return { paymentApproved: !!hasPaid, token: token };
   }
 
   async createMercadoPagoPreference(userId: string) {
@@ -93,7 +119,7 @@ export class PaymentsService {
           items: [
             {
               id: '1',
-              title: 'Acceso al chat de soporte',
+              title: 'Habilitacion de notificaciones',
               quantity: 1,
               unit_price: 5,
               currency_id: 'USD',

@@ -164,30 +164,6 @@ En caso de dudas se anexara una imagen al discord para un ejemplo más grafico
 }
 }
 
-### DATOS DE SEEDER PLAN
-
-{
-plan_name: 'Plan 1 año',
-total_price: 100,
-duration_plan_years: 1,
-percentage_discount: 0,
-annual_price: 100,
-},
-{
-plan_name: 'Plan 3 años',
-total_price: 225,
-duration_plan_years: 3,
-percentage_discount: 25,
-annual_price: 75,
-},
-{
-plan_name: 'Plan 5 años',
-total_price: 375,
-duration_plan_years: 5,
-percentage_discount: 25,
-annual_price: 125,
-},
-
 ### CUENTAS TEST MERCADO PAGO
 
 - USUARIO VENDEDOR

@@ -280,3 +280,5 @@ Importante: Cada vez que reinicies ngrok, la URL cambiará. Actualiza el notific
 - El sistema usa `node-cron` para la tarea programada.
 - Los nombres de roles deben coincidir exactamente con los de la base de datos (`'Admin'`, `'Soporte'`, `'Empleado'`).
 - El endpoint `/notifications/test-cron` puede usarse para pruebas manuales (proteger o eliminar en producción)
+
+### Muchas gracias por toda la participacion de todos, un gran equipo de trabajo

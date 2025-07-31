@@ -2,7 +2,7 @@ import { ApiProperty, PickType } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
-  IsNumber,
+  IsNumberString,
   IsString,
   Matches,
   MaxLength,
@@ -12,15 +12,15 @@ import {
 export class CreateUserDto {
   @ApiProperty({
     description: 'The name of the user',
-    example: 'first name example',
+    example: 'Carlos',
   })
   @IsNotEmpty()
   @IsString()
   name: string;
 
   @ApiProperty({
-    description: 'The name of the user',
-    example: 'first surname example',
+    description: 'The lastname of the user',
+    example: 'Fernandez',
   })
   @IsNotEmpty()
   @IsString()
@@ -68,8 +68,9 @@ export class CreateUserDto {
 
   @ApiProperty({
     description: 'identification num of the user',
-    example: '123456789',
+    example: '456267345',
   })
+  @IsNotEmpty()
   identification_number: string;
 
   @ApiProperty({
@@ -77,8 +78,6 @@ export class CreateUserDto {
     example: '1234567890',
   })
   @IsNotEmpty()
-  @IsString()
-  @Matches(/^[0-9]+$/)
   phone: string;
 
   @ApiProperty({
@@ -86,25 +85,8 @@ export class CreateUserDto {
     example: '1',
   })
   @IsNotEmpty()
-  @IsNumber()
-  typeId: number;
-
-  @ApiProperty({
-    description: 'user id credentials',
-    example: '1',
-  })
-  @IsNotEmpty()
-  @IsNumber()
-  credentials: number;
-
-  @ApiProperty({
-    required: false,
-    default: 3,
-    description: 'user id role (default is 3)',
-    example: '1',
-  })
-  @IsNumber()
-  role?: number;
+  @IsNumberString()
+  typeId: string;
 }
 
 export class loginDto extends PickType(CreateUserDto, ['email', 'password']) {}

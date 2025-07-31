@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   BadRequestException,
   ConflictException,
@@ -12,6 +14,11 @@ import { Credentials } from 'src/users/entities/Credentials.entity';
 import * as bcrypt from 'bcrypt';
 import { UserResponseDto } from 'src/users/dto/userResponse.dto';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { GoogleProfile } from './interfaces/google-profile.interface';
+import { ChangePasswordDto } from 'src/auth/changePassword.dto';
+import { Payment } from 'src/payments/entities/entity.payment';
 
 @Injectable()
 export class AuthService {
@@ -20,7 +27,10 @@ export class AuthService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Credentials)
     private readonly credentialsRepository: Repository<Credentials>,
+    @InjectRepository(Payment)
+    private readonly paymentRepository: Repository<Payment>,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   async create(userData: CreateUserDto): Promise<UserResponseDto> {
@@ -41,18 +51,20 @@ export class AuthService {
       throw new ConflictException('the identification number already exist');
     }
 
+    const typeIdNumber = parseInt(userData.typeId, 10);
+
     const user: User = this.usersRepository.create({
       name: userData.name,
       lastname: userData.lastname,
-      identification_number: userData.identification_number,
+      identification_number: userData.identification_number.toString(),
       phone: userData.phone.toString(),
-      typeId: { id_typeid: userData.typeId },
-      role: { id_role: userData.role ?? 3 },
+      typeId: { id_typeid: typeIdNumber },
+      role: { id_role: 3 },
     });
 
     const savedUser = await this.usersRepository.save(user);
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const hashedPassword: string = await bcrypt.hash(userData.password, 10);
 
     const credentials = this.credentialsRepository.create({
@@ -91,19 +103,130 @@ export class AuthService {
 
     if (!findUser) throw new BadRequestException('Incorrect credentials');
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const passwordMatch = await bcrypt.compare(
       credentials.password,
       findUser.password,
     );
     if (!passwordMatch) throw new BadRequestException('Incorrect credentials');
 
+    const payment = await this.paymentRepository.findOne({
+      where: { userId: findUser.user.id_user, status: 'approved' },
+    });
+
     const payload = {
-      id: findUser.id_credentials,
+      id_user: findUser.user.id_user,
       email: findUser.email,
       id_role: findUser.user.role.id_role,
+      paymentApproved: !!payment,
     };
     const token = this.jwtService.sign(payload);
     return token;
+  }
+
+  async validateUser(userData: GoogleProfile) {
+    console.log('Validate User');
+    console.log(userData);
+
+    if (!userData?.email) {
+      throw new BadRequestException('Email is required');
+    }
+
+    const user = await this.credentialsRepository.findOne({
+      where: { email: userData.email },
+      relations: ['user', 'user.typeId', 'user.role'],
+    });
+
+    const paymentUser = await this.paymentRepository.findOne({
+      where: { userId: user?.user.id_user, status: 'approved' },
+    });
+
+    if (user) {
+      return {
+        id_user: user.user.id_user,
+        email: user.email,
+        id_role: user.user.role.id_role,
+        paymentApproved: !!paymentUser,
+      };
+    }
+
+    const newUser: User = this.usersRepository.create({
+      name: userData.displayName,
+      lastname: userData.familyName,
+      identification_number: null,
+      phone: null,
+      role: { id_role: 3 },
+    });
+
+    const savedUser = await this.usersRepository.save(newUser);
+
+    const credentials = this.credentialsRepository.create({
+      email: userData.email,
+      password: null,
+      user: savedUser,
+    });
+
+    await this.credentialsRepository.save(credentials);
+
+    const savedUserPayment = await this.paymentRepository.findOne({
+      where: { userId: savedUser.id_user, status: 'approved' },
+    });
+
+    return {
+      id_user: savedUser.id_user,
+      email: credentials.email,
+      id_role: savedUser.role.id_role,
+      paymentApproved: !!savedUserPayment,
+    };
+  }
+
+  createJwtToken(payload: JwtPayload) {
+    const token = this.jwtService.sign(payload);
+    return token;
+  }
+
+  async changePassword(id_user: string, changePassworDto: ChangePasswordDto) {
+    const userFound: User | null = await this.usersRepository.findOne({
+      where: { id_user: id_user },
+    });
+
+    if (!userFound)
+      throw new NotFoundException(`Usuer with id: ${id_user} not found`);
+
+    const credentialFound: Credentials | null =
+      await this.credentialsRepository.findOne({
+        where: { user: userFound },
+      });
+
+    if (!credentialFound) throw new NotFoundException('credentials not found');
+
+    if (
+      credentialFound.password !== null &&
+      changePassworDto.oldPassword === null
+    ) {
+      throw new BadRequestException('old password cant be null');
+    }
+
+    if (credentialFound.password !== null) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      const compareOldPassword: boolean = await bcrypt.compare(
+        changePassworDto.oldPassword,
+        credentialFound.password,
+      );
+      if (!compareOldPassword)
+        throw new BadRequestException('old password does not match');
+    }
+
+    if (changePassworDto.newPassword !== changePassworDto.newPassword2)
+      throw new BadRequestException('new passwords do not match');
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    const changedPassword = await bcrypt.hash(changePassworDto.newPassword, 10);
+
+    credentialFound.password = changedPassword;
+
+    await this.credentialsRepository.save(credentialFound);
+
+    return 'password chande with success';
   }
 }

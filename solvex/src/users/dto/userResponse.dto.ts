@@ -11,10 +11,10 @@ export class UserResponseDto {
   lastname: string;
 
   @ApiProperty()
-  identification_number: string;
+  identification_number: string | null;
 
   @ApiProperty()
-  phone: string;
+  phone: string | null;
 
   @ApiProperty()
   typeId: {

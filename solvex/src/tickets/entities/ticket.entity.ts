@@ -1,12 +1,15 @@
-import { TicketStatus } from 'src/tickets/entities/statusTickets.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { TicketStatus } from './statusTickets.entity';
+import { Area } from './areas.entity';
+import { ResolutionTicket } from './resolutionsTicket';
 
 @Entity({ name: 'tickets' })
 export class Ticket {
@@ -22,19 +25,19 @@ export class Ticket {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   creation_date: Date;
 
-  @Column({ type: 'timestamp', nullable: false })
-  closing_date: Date;
+  @Column({ type: 'timestamp', nullable: true, default: null })
+  closing_date: Date | null;
 
-  @Column({ type: 'varchar', length: 500 })
+  @Column({ type: 'varchar', default: 'no image' })
   img_1: string;
 
-  @Column({ type: 'varchar', length: 500 })
+  @Column({ type: 'varchar', default: 'no image' })
   img_2: string;
 
-  @Column({ type: 'varchar', length: 500 })
+  @Column({ type: 'varchar', default: 'no image' })
   img_3: string;
 
-  @ManyToOne(() => TicketStatus, (status) => status.id_status)
+  @ManyToOne(() => TicketStatus, (status) => status.tickets)
   @JoinColumn({ name: 'id_status' })
   id_status: TicketStatus;
 
@@ -45,4 +48,11 @@ export class Ticket {
   @ManyToOne(() => User, (user) => user.id_user)
   @JoinColumn({ name: 'id_helper' })
   id_helper: User;
+
+  @ManyToOne(() => Area, (area) => area.tickets)
+  @JoinColumn({ name: 'id_area' })
+  area: Area;
+
+  @OneToMany(() => ResolutionTicket, (resolution) => resolution.ticket)
+  resolutions: ResolutionTicket[];
 }

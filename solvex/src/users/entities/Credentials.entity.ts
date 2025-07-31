@@ -15,8 +15,8 @@ export class Credentials {
   @Column({ type: 'varchar', length: 120, unique: true, nullable: false })
   email: string;
 
-  @Column({ type: 'varchar', length: 100, nullable: false })
-  password: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  password: string | null;
 
   @OneToOne(() => User, (user) => user.credentials)
   @JoinColumn({ name: 'id_user' })

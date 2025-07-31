@@ -1,8 +1,55 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NotReturnPasswordInterceptor } from './interceptor/not-return-password.interceptor';
+// import * as express from 'express'; // Importa express para usar su body parser
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.useGlobalPipes(new ValidationPipe());
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Solvex Company')
+    .setDescription('Esta es una Api construida para el software Solvex')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const configService = app.get(ConfigService);
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const frontendUrl = configService.get('FRONTEND_URL');
+  const allowedOrigins = [
+    frontendUrl,
+    'http://localhost:3000',
+    'https://solvex-front.vercel.app',
+    'https://solvex-2v25.onrender.com',
+    'http://localhost:4000',
+  ];
+
+  app.enableCors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Origen no permitido por CORS'));
+      }
+    },
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Authorization',
+    credentials: true,
+  });
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api', app, document);
+
+  app.useGlobalInterceptors(new NotReturnPasswordInterceptor());
+
   await app.listen(process.env.PORT ?? 4000);
 }
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 bootstrap();

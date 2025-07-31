@@ -1,44 +1,28 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
-export class CreateTicketDto {
-  @ApiProperty()
+export class createTicketDto {
+  @ApiProperty({
+    description: 'problem title',
+    example: 'Impresora no responde',
+  })
   @IsNotEmpty()
   @IsString()
   title: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'description of the problem',
+    example: 'La impresora no responde y muestra luz roja intermitente',
+  })
   @IsNotEmpty()
   @IsString()
   description: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'id del area',
+    example: '1',
+  })
   @IsNotEmpty()
   @IsString()
-  img_1: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  img_2: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  img_3: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsNumber()
-  id_status: number;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  id_empleado: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @ApiProperty()
-  id_helper: string;
+  id_area: number;
 }

@@ -13,7 +13,7 @@ import { NotificationService } from './crons.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 // import { RolesGuard } from 'src/auth/roles.guard';
 // import { NotificationRolesGuard } from './notification-roles.guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorators';
 import { Role } from 'src/roles.enum';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -28,6 +28,13 @@ export class NotificationController {
   // Obtener notificaciones del usuario autenticado (protegido solo por AuthGuard)
   @Roles(Role.ADMIN, Role.HELPER)
   @UseGuards(AuthGuard, RolesGuard)
+  @ApiOperation({
+    summary: 'Activar notificaciones',
+    description: `
+      Para activar las notificaciones en modo de prueba se necesita primero correr
+      la ruta de test-cron
+    `,
+  })
   @Get()
   async getUserNotifications(@Request() req: any) {
     return this.notificationService.getUserNotifications(req.user.id_user);
@@ -58,9 +65,26 @@ export class NotificationController {
     return { message: 'CRON ejecutado manualmente' };
   }
 
-  @Roles(Role.ADMIN)
-  @UseGuards(AuthGuard, RolesGuard)
   @UseGuards(AuthGuard)
+  @ApiBody({
+    description: 'Datos para la notificación',
+    schema: {
+      type: 'object',
+      properties: {
+        role: {
+          type: 'string',
+          example: 'Admin',
+          description: 'Rol de los usuarios a notificar',
+        },
+        message: {
+          type: 'string',
+          example: 'Mensaje importante para administradores',
+          description: 'Contenido de la notificación',
+        },
+      },
+      required: ['role', 'message'],
+    },
+  })
   @Post('notify-by-role')
   async notifyByRole(@Body() body: { role: string; message: string }) {
     return this.notificationService.notifyUsersByRole(body.role, body.message);

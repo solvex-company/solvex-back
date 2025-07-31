@@ -22,6 +22,7 @@ import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { JwtRequest } from './interfaces/jwt-request.interface';
 import {
   ApiBearerAuth,
+  ApiExcludeEndpoint,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -65,17 +66,16 @@ export class AuthController {
   @ApiOperation({
     summary: 'Autenticación con Google',
     description: `
-    <b>Flujo de autenticación:</b>
-    <ol>
-      <li>El usuario es redirigido a Google para autenticarse</li>
-      <li>Google retorna al callback URL con el código</li>
-      <li>El servidor intercambia el código por tokens</li>
-    </ol>
-    <b>Nota:</b> Este endpoint no debe ser llamado directamente desde Swagger UI
+    Flujo de autenticación:
+      Copie esta URL y ábrala en el navegador: https://solvex-2v25.onrender.com/auth/google/login
+      El usuario es redirigido a Google para autenticarse
+      Google retorna al callback URL con el código
+      El servidor intercambia el código por tokens
+    Nota: Este endpoint no debe ser llamado directamente desde Swagger UI
   `,
   })
   @ApiResponse({
-    status: 204,
+    status: 302,
   })
   googleLogin(): void {
     // Empty on purpose – just triggers the guard
@@ -83,16 +83,7 @@ export class AuthController {
 
   @Get('google/redirect')
   @UseGuards(GoogleAuthGuard)
-  @ApiOperation({
-    summary: 'Google OAuth Redirect',
-    description: 'Handles the Google login callback and returns a JWT token.',
-  })
-  @ApiResponse({
-    description: 'Returns JWT token',
-    schema: {
-      example: 'your-jwt-token',
-    },
-  })
+  @ApiExcludeEndpoint()
   handleRedirect(@Req() req: JwtRequest, @Res() res: Response) {
     try {
       if (!req.user) {

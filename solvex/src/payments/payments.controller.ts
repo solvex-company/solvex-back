@@ -4,7 +4,11 @@ import { Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { JwtRequest } from 'src/auth/interfaces/jwt-request.interface';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiExcludeEndpoint,
+  ApiOperation,
+} from '@nestjs/swagger';
 
 @Controller('payments')
 export class PaymentsController {
@@ -20,16 +24,25 @@ export class PaymentsController {
     return checkoutInfo;
   }
 
+  @ApiExcludeEndpoint()
   @Get('sub')
   sub() {
     return this.paymentsService.sub();
   }
 
   @Post('webhook')
+  @ApiOperation({
+    description: `
+      Mercado Pago hace un request a esta ruta una vez que cambia el estado del pago. 
+      El servicio luego procede a actualizar los datos del pago en la base de datos.
+       *No es posible probar esta ruta en Swagger
+    `,
+  })
   async handleMercadoPagoWebhook(@Req() req: Request) {
     return this.paymentsService.handleMercadoPagoWebhook(req.body);
   }
 
+  @ApiBearerAuth()
   @Get('is-approved')
   @UseGuards(AuthGuard)
   async approvedPaymentToken(@Req() req: JwtRequest) {

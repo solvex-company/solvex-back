@@ -126,9 +126,9 @@ export class PaymentsService {
             },
           ],
           back_urls: {
-            success: 'https://localhost:3000/success',
-            failure: 'https://localhost:3000/failure',
-            pending: 'https://localhost:3000/pending',
+            success: 'https://solvex-front.vercel.app/success',
+            failure: 'https://solvex-front.vercel.app/failure',
+            pending: 'https://solvex-front.vercel.app/pending',
           },
           expiration_date_from: now.toISOString(),
           expiration_date_to: expiresAt.toISOString(),
@@ -146,14 +146,7 @@ export class PaymentsService {
         },
       });
 
-      // Log de toda la respuesta de la preferencia para depuración
-      console.log(
-        'Respuesta completa de preference.create:',
-        preferenceResponse,
-      );
       const { id, init_point, items } = preferenceResponse;
-      // Log del valor que se va a guardar como mp_preference_id
-      console.log('Guardando mp_preference_id:', id);
 
       if (!id || !init_point) {
         throw new Error(

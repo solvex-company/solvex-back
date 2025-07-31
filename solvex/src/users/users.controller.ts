@@ -44,7 +44,6 @@ export class UsersController {
   })
   async getOwnUserData(@Req() req: JwtRequest): Promise<User> {
     const userId: string = req.user.id_user;
-    console.log(userId);
     return await this.usersService.getOwnUserData(userId);
   }
 
@@ -80,6 +79,7 @@ export class UsersController {
     return this.usersService.changeRolUser(id);
   }
 
+  @ApiBearerAuth()
   @Get('is-password-null')
   @UseGuards(AuthGuard)
   async isPasswordNull(@Req() req: JwtRequest): Promise<boolean> {

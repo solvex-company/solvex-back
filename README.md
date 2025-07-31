@@ -164,30 +164,6 @@ En caso de dudas se anexara una imagen al discord para un ejemplo más grafico
 }
 }
 
-### DATOS DE SEEDER PLAN
-
-{
-plan_name: 'Plan 1 año',
-total_price: 100,
-duration_plan_years: 1,
-percentage_discount: 0,
-annual_price: 100,
-},
-{
-plan_name: 'Plan 3 años',
-total_price: 225,
-duration_plan_years: 3,
-percentage_discount: 25,
-annual_price: 75,
-},
-{
-plan_name: 'Plan 5 años',
-total_price: 375,
-duration_plan_years: 5,
-percentage_discount: 25,
-annual_price: 125,
-},
-
 ### CUENTAS TEST MERCADO PAGO
 
 - USUARIO VENDEDOR
@@ -256,7 +232,7 @@ Access Token: APP_USR-5372043080270248-071710-1654fdad50fa9e4a557b269b264cfdef-2
 4. Usar el `paymentUrl` recibido para realizar el pago en Mercado Pago
 5. El backend recibirá los webhooks y actualizará el estado del pago automáticamente
 
-### IMPORTANTE PARA QUE FUNCIONE HAY QUE USAR NGROK
+### IMPORTANTE PARA QUE FUNCIONE AL HACER PRUEBAS LOCALES HAY QUE USAR NGROK
 
 MP_WEBHOOK_URL: 'https://abcd1234.ngrok.io/payments/webhook'
 
@@ -289,7 +265,7 @@ Importante: Cada vez que reinicies ngrok, la URL cambiará. Actualiza el notific
 2. **Consulta de notificaciones:**  
    - Cualquier usuario autenticado puede consultar sus notificaciones con `GET /notifications`.
    - Solo el admin verá notificaciones sobre la inactividad de helpers.
-   - Soporte y empleado verán notificaciones si en el futuro se implementan para ellos.
+   - Soporte verá notificaciones sobre los tickets sin resolver pasadas 24hs y empleados verán notificaciones si en el futuro se implementan para ellos.
 
 3. **Marcar como leída:**  
    - Cualquier usuario autenticado puede marcar sus notificaciones como leídas con `PATCH /notifications/:id/read`.
@@ -304,3 +280,5 @@ Importante: Cada vez que reinicies ngrok, la URL cambiará. Actualiza el notific
 - El sistema usa `node-cron` para la tarea programada.
 - Los nombres de roles deben coincidir exactamente con los de la base de datos (`'Admin'`, `'Soporte'`, `'Empleado'`).
 - El endpoint `/notifications/test-cron` puede usarse para pruebas manuales (proteger o eliminar en producción)
+
+### Muchas gracias por toda la participacion de todos, un gran equipo de trabajo

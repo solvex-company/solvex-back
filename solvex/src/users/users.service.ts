@@ -34,10 +34,6 @@ export class UsersService {
       relations: ['credentials'],
     });
     if (!user) throw new NotFoundException('User not found');
-    console.log('Expected ID:', userId);
-    console.log('Returned ID:', user.id_user);
-    console.log(user.credentials.email);
-    console.log(user.credentials.password);
     if (user.credentials.password) return false;
     return true;
   }

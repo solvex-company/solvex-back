@@ -24,13 +24,11 @@ export class AreaSeeder {
 
       if (existingAreas.length === 0) {
         await this.areaRepository.save(areasToCreate);
-        console.log('✅ Seeder de áreas ejecutado correctamente');
         return {
           success: true,
           message: 'Áreas creadas exitosamente',
         };
       } else {
-        console.log('Las áreas ya existen en la base de datos');
         return {
           success: false,
           message: 'Las áreas ya existen en la base de datos',

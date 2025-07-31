@@ -20,7 +20,7 @@ export class resolutionTicketDto {
 
   @ApiProperty({
     description: 'id del ticket',
-    example: '1',
+    example: '"1"',
   })
   @IsNotEmpty()
   @IsString()

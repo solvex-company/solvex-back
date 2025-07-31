@@ -42,7 +42,7 @@ export class MailTemplatesService {
             <p>${ticketInfo.description}</p>
             <p><strong>Área:</strong> ${ticketInfo.area}</p>
             <p><strong>Fecha de creación:</strong> ${ticketInfo.date}</p>
-            <a href="http://localhost:3000/login" class="button">
+            <a href="https://solvex-front.vercel.app/login" class="button">
               Ir a portal de asistencia
             </a>
           </div>
@@ -210,7 +210,7 @@ export class MailTemplatesService {
           </div>
           
           <div class="button-container">
-            <a href="http://localhost:3000/login" class="ticket-button">
+            <a href="https://solvex-front.vercel.app/login" class="ticket-button">
               Ir a portal de asistencia
             </a>
           </div>

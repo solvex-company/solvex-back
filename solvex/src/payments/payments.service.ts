@@ -126,9 +126,9 @@ export class PaymentsService {
             },
           ],
           back_urls: {
-            success: 'https://localhost:3000/success',
-            failure: 'https://localhost:3000/failure',
-            pending: 'https://localhost:3000/pending',
+            success: 'https://solvex-front.vercel.app/success',
+            failure: 'https://solvex-front.vercel.app/failure',
+            pending: 'https://solvex-front.vercel.app/pending',
           },
           expiration_date_from: now.toISOString(),
           expiration_date_to: expiresAt.toISOString(),

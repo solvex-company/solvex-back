@@ -7,7 +7,7 @@ import { Ticket } from 'src/tickets/entities/ticket.entity';
 import { ResolutionTicket } from 'src/tickets/entities/resolutionsTicket';
 import { Roles } from 'src/users/entities/Roles.entity';
 import * as cron from 'node-cron';
-import { LessThan, IsNull } from 'typeorm';
+import { LessThan, IsNull, Like } from 'typeorm';
 
 @Injectable()
 export class NotificationService implements OnModuleInit {
@@ -64,13 +64,42 @@ export class NotificationService implements OnModuleInit {
 
   // Obtiene todas las notificaciones de un usuario
   async getUserNotifications(userId: string): Promise<Notification[]> {
-    return this.notificationRepository
+    const allNotifications = await this.notificationRepository
       .createQueryBuilder('notification')
       .leftJoinAndSelect('notification.user', 'user')
       .leftJoinAndSelect('notification.ticket', 'ticket')
       .where('user.id_user = :userId', { userId })
       .orderBy('notification.createdAt', 'DESC')
       .getMany();
+
+    // Agrupar notificaciones de inactividad por helper y tomar solo la más reciente
+    const helperNotifications = new Map<string, Notification>();
+    const otherNotifications: Notification[] = [];
+
+    for (const notification of allNotifications) {
+      // Si es una notificación de inactividad de helper
+      if (notification.message && notification.message.includes('no ha resuelto tickets en 2 dias o más')) {
+        // Extraer el nombre del helper del mensaje
+        const match = notification.message.match(/El helper (.+?) no ha resuelto tickets/);
+        if (match) {
+          const helperName = match[1];
+          // Solo guardar si no existe una notificación más reciente para este helper
+          // Como ya están ordenadas por fecha DESC, la primera que encontremos será la más reciente
+          if (!helperNotifications.has(helperName)) {
+            helperNotifications.set(helperName, notification);
+          }
+        }
+      } else {
+        // Para otras notificaciones, incluirlas todas
+        otherNotifications.push(notification);
+      }
+    }
+
+    // Combinar notificaciones de helpers (solo la más reciente) con otras notificaciones
+    const result = [...helperNotifications.values(), ...otherNotifications];
+    
+    // Ordenar por fecha de creación (más reciente primero)
+    return result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   // Marca una notificación como leída
@@ -123,7 +152,7 @@ export class NotificationService implements OnModuleInit {
     for (const helper of helpers) {
       // Buscar la última resolución de ticket de este helper
       const lastResolution = await this.resolutionTicketRepository.findOne({
-        where: { id_helper: helper },
+        where: { id_helper: { id_user: helper.id_user } },
         order: { date: 'DESC' },
       });
       let lastDate = lastResolution
@@ -133,11 +162,12 @@ export class NotificationService implements OnModuleInit {
       // Calcular horas desde la última resolución
       const hoursSince =
         (now.getTime() - new Date(lastDate).getTime()) / (1000 * 60 * 60);
-      // Primer aviso a las 48h, luego cada 24h
+      
+      // Si está inactivo por 48 horas o más, crear notificación
       if (hoursSince >= 48) {
-        const avisos = Math.floor((hoursSince - 48) / 24) + 1;
-        const message = `El helper ${helper.name} ${helper.lastname} no ha resuelto tickets en ${48 + (avisos - 1) * 24}hs`;
+        const message = `El helper ${helper.name} ${helper.lastname} no ha resuelto tickets en 2 dias o más`;
         for (const admin of admins) {
+          // Verificar si ya existe una notificación de inactividad para este helper
           const existing = await this.notificationRepository.findOne({
             where: {
               user: admin,
@@ -170,15 +200,27 @@ export class NotificationService implements OnModuleInit {
       },
     });
 
+    // Eliminar notificaciones existentes de tickets sin resolver
+    for (const helper of helpers) {
+      const existingNotifications = await this.notificationRepository.find({
+        where: { 
+          user: helper, 
+          ticket: undefined,
+          message: Like('%tickets sin resolver desde hace 24 horas%')
+        },
+      });
+      
+      if (existingNotifications.length > 0) {
+        const notificationIds = existingNotifications.map(n => n.id);
+        await this.notificationRepository.delete(notificationIds);
+      }
+    }
+
+    // Crear nuevas notificaciones con el conteo actualizado
     if (tickets.length > 0) {
       const message = `Tienes ${tickets.length} tickets sin resolver desde hace 24 horas`;
       for (const helper of helpers) {
-        const existing = await this.notificationRepository.findOne({
-          where: { user: helper, message, ticket: undefined },
-        });
-        if (!existing) {
-          await this.createNotification(helper, undefined, message);
-        }
+        await this.createNotification(helper, undefined, message);
       }
     }
   }
@@ -204,5 +246,140 @@ export class NotificationService implements OnModuleInit {
       }
     }
     return { notified };
+  }
+
+  /**
+   * Elimina las notificaciones de inactividad de un helper cuando resuelve un ticket
+   */
+  async clearHelperInactivityNotifications(helperId: string) {
+    const helper = await this.userRepository.findOne({
+      where: { id_user: helperId },
+    });
+    
+    if (!helper) return { deletedCount: 0 };
+
+    const adminRole = await this.rolesRepository.findOne({
+      where: { role_name: 'Admin' },
+    });
+    
+    if (!adminRole) return { deletedCount: 0 };
+
+    const admins = await this.userRepository.find({
+      where: { role: { id_role: adminRole.id_role } },
+    });
+
+    let deletedCount = 0;
+
+    for (const admin of admins) {
+      const notificationsToDelete = await this.notificationRepository
+        .createQueryBuilder('notification')
+        .where('notification.user = :adminId', { adminId: admin.id_user })
+        .andWhere('notification.ticket IS NULL')
+        .andWhere('notification.message LIKE :messagePattern', { 
+          messagePattern: `%${helper.name} ${helper.lastname} no ha resuelto tickets en 2 dias o más%` 
+        })
+        .getMany();
+
+      if (notificationsToDelete.length > 0) {
+        const notificationIds = notificationsToDelete.map(n => n.id);
+        const deletedNotifications = await this.notificationRepository.delete(notificationIds);
+        deletedCount += deletedNotifications.affected || 0;
+      }
+    }
+
+    return { deletedCount };
+  }
+
+  /**
+   * Limpia notificaciones duplicadas de inactividad, manteniendo solo la más reciente por helper
+   */
+  async cleanDuplicateInactivityNotifications() {
+    const adminRole = await this.rolesRepository.findOne({
+      where: { role_name: 'Admin' },
+    });
+    
+    if (!adminRole) return { deletedCount: 0 };
+
+    const admins = await this.userRepository.find({
+      where: { role: { id_role: adminRole.id_role } },
+    });
+
+    let totalDeleted = 0;
+
+    for (const admin of admins) {
+      // Obtener todas las notificaciones de inactividad del admin
+      const inactivityNotifications = await this.notificationRepository
+        .createQueryBuilder('notification')
+        .where('notification.user = :adminId', { adminId: admin.id_user })
+        .andWhere('notification.ticket IS NULL')
+        .andWhere('notification.message LIKE :messagePattern', { 
+          messagePattern: '%no ha resuelto tickets en 2 dias o más%' 
+        })
+        .orderBy('notification.createdAt', 'DESC')
+        .getMany();
+
+      // Agrupar por helper y mantener solo la más reciente
+      const helperNotifications = new Map<string, Notification>();
+      const notificationsToDelete: Notification[] = [];
+
+      for (const notification of inactivityNotifications) {
+        const match = notification.message.match(/El helper (.+?) no ha resuelto tickets/);
+        if (match) {
+          const helperName = match[1];
+          if (helperNotifications.has(helperName)) {
+            // Ya existe una notificación más reciente para este helper, marcar para eliminar
+            notificationsToDelete.push(notification);
+          } else {
+            // Es la primera (más reciente) para este helper
+            helperNotifications.set(helperName, notification);
+          }
+        }
+      }
+
+      // Eliminar las notificaciones duplicadas
+      if (notificationsToDelete.length > 0) {
+        const notificationIds = notificationsToDelete.map(n => n.id);
+        const deletedNotifications = await this.notificationRepository.delete(notificationIds);
+        totalDeleted += deletedNotifications.affected || 0;
+      }
+    }
+
+    return { deletedCount: totalDeleted };
+  }
+
+  /**
+   * Limpia las notificaciones de tickets sin resolver cuando se asignan tickets a helpers
+   */
+  async clearTicketsWithoutResolverNotifications() {
+    const helperRole = await this.rolesRepository.findOne({
+      where: { role_name: 'Soporte' },
+    });
+    
+    if (!helperRole) return { deletedCount: 0 };
+
+    const helpers = await this.userRepository.find({
+      where: { role: { id_role: helperRole.id_role } },
+    });
+
+    let totalDeleted = 0;
+
+    for (const helper of helpers) {
+      const notificationsToDelete = await this.notificationRepository
+        .createQueryBuilder('notification')
+        .where('notification.user = :helperId', { helperId: helper.id_user })
+        .andWhere('notification.ticket IS NULL')
+        .andWhere('notification.message LIKE :messagePattern', { 
+          messagePattern: '%tickets sin resolver desde hace 24 horas%' 
+        })
+        .getMany();
+
+      if (notificationsToDelete.length > 0) {
+        const notificationIds = notificationsToDelete.map(n => n.id);
+        const deletedNotifications = await this.notificationRepository.delete(notificationIds);
+        totalDeleted += deletedNotifications.affected || 0;
+      }
+    }
+
+    return { deletedCount: totalDeleted };
   }
 }

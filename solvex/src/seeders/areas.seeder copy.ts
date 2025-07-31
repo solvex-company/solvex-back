@@ -53,7 +53,5 @@ export class TicketSeeder {
         area: defaultArea,
       }),
     );
-
-    console.log('✅ Ticket de ejemplo creado exitosamente');
   }
 }

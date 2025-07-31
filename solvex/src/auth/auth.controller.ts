@@ -41,7 +41,6 @@ export class AuthController {
 
   @Post('signup')
   create(@Body() userData: CreateUserDto) {
-    console.log(userData);
     const transformedData = {
       ...userData,
       typeId: userData.typeId.toString(),
@@ -51,7 +50,6 @@ export class AuthController {
       throw new BadRequestException('typeId must be a valid number');
     }
 
-    console.log(transformedData);
     return this.authService.create(transformedData);
   }
 
@@ -104,7 +102,6 @@ export class AuthController {
       const payload: JwtPayload = req.user;
 
       const token = this.authService.createJwtToken(payload);
-      console.log(this.configService.get<string>('FRONTEND_URL'));
       return res.redirect(
         `${this.configService.get<string>('FRONTEND_URL')!}/auth/callback?token=${token}`,
       );

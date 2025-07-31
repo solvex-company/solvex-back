@@ -44,7 +44,6 @@ export class UsersController {
   })
   async getOwnUserData(@Req() req: JwtRequest): Promise<User> {
     const userId: string = req.user.id_user;
-    console.log(userId);
     return await this.usersService.getOwnUserData(userId);
   }
 

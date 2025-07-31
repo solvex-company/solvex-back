@@ -85,7 +85,6 @@ export class TicketEmployeeSedder {
 
     await this.ticketRepository.save(newTicket);
 
-    console.log('✅ Ticket de ejemplo creado exitosamente');
   }
 
   async seed() {

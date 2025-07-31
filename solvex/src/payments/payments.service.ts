@@ -146,14 +146,7 @@ export class PaymentsService {
         },
       });
 
-      // Log de toda la respuesta de la preferencia para depuración
-      console.log(
-        'Respuesta completa de preference.create:',
-        preferenceResponse,
-      );
       const { id, init_point, items } = preferenceResponse;
-      // Log del valor que se va a guardar como mp_preference_id
-      console.log('Guardando mp_preference_id:', id);
 
       if (!id || !init_point) {
         throw new Error(

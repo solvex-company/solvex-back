@@ -125,8 +125,6 @@ export class AuthService {
   }
 
   async validateUser(userData: GoogleProfile) {
-    console.log('Validate User');
-    console.log(userData);
 
     if (!userData?.email) {
       throw new BadRequestException('Email is required');

@@ -213,7 +213,6 @@ export class UserSeeder {
       });
 
       await this.userRepository.save(newUser);
-      console.log(`✅ Usuario ${userData.email} creado exitosamente`);
     }
   }
 }

@@ -59,4 +59,43 @@ export class NotificationController {
   async notifyByRole(@Body() body: { role: string; message: string }) {
     return this.notificationService.notifyUsersByRole(body.role, body.message);
   }
+
+  // Debug: Ver todas las notificaciones en la base de datos
+  @UseGuards(AuthGuard)
+  @Get('debug-all')
+  async debugAllNotifications() {
+    const allNotifications = await this.notificationService['notificationRepository']
+      .createQueryBuilder('notification')
+      .leftJoinAndSelect('notification.user', 'user')
+      .leftJoinAndSelect('notification.ticket', 'ticket')
+      .orderBy('notification.createdAt', 'DESC')
+      .getMany();
+
+    return {
+      totalNotifications: allNotifications.length,
+      notifications: allNotifications.map(n => ({
+        id: n.id,
+        message: n.message,
+        userId: n.user?.id_user,
+        userName: n.user ? `${n.user.name} ${n.user.lastname}` : 'N/A',
+        ticketId: n.ticket?.id_ticket,
+        read: n.read,
+        createdAt: n.createdAt
+      }))
+    };
+  }
+
+  // Limpiar notificaciones duplicadas de inactividad
+  @UseGuards(AuthGuard)
+  @Post('clean-duplicates')
+  async cleanDuplicates() {
+    return this.notificationService.cleanDuplicateInactivityNotifications();
+  }
+
+  // Limpiar notificaciones de tickets sin resolver
+  @UseGuards(AuthGuard)
+  @Post('clean-tickets-notifications')
+  async cleanTicketsNotifications() {
+    return this.notificationService.clearTicketsWithoutResolverNotifications();
+  }
 }

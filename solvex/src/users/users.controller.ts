@@ -80,6 +80,7 @@ export class UsersController {
     return this.usersService.changeRolUser(id);
   }
 
+  @ApiBearerAuth()
   @Get('is-password-null')
   @UseGuards(AuthGuard)
   async isPasswordNull(@Req() req: JwtRequest): Promise<boolean> {

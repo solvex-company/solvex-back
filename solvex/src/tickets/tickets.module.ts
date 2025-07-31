@@ -10,6 +10,9 @@ import { Area } from './entities/areas.entity';
 import { ResolutionTicket } from './entities/resolutionsTicket';
 import { Credentials } from '../users/entities/Credentials.entity';
 import { MailModule } from '../notifications/mail/mail.module';
+import { NotificationService } from '../notifications/crons/crons.service';
+import { Notification } from '../notifications/crons/entities/notification.entity';
+import { Roles } from '../users/entities/Roles.entity';
 
 @Module({
   imports: [
@@ -20,11 +23,13 @@ import { MailModule } from '../notifications/mail/mail.module';
       Area,
       ResolutionTicket,
       Credentials,
+      Notification,
+      Roles,
     ]),
     FileUploadModule,
     MailModule,
   ],
   controllers: [TicketsController],
-  providers: [TicketsService],
+  providers: [TicketsService, NotificationService],
 })
 export class TicketsModule {}

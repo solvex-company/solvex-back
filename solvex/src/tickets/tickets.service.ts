@@ -22,6 +22,7 @@ import { ResolutionTicket } from './entities/resolutionsTicket';
 import { resolutionTicketDto } from './dto/resolutionTicket.dto';
 import { Credentials } from 'src/users/entities/Credentials.entity';
 import { MailService } from 'src/notifications/mail/mail.service';
+import { NotificationService } from 'src/notifications/crons/crons.service';
 
 @Injectable()
 export class TicketsService {
@@ -42,6 +43,7 @@ export class TicketsService {
     @InjectRepository(ResolutionTicket)
     private readonly resolutionTicketRepository: Repository<ResolutionTicket>,
     private readonly mailService: MailService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async createTicket(
@@ -318,6 +320,23 @@ export class TicketsService {
 
     await this.resolutionTicketRepository.save(newResolutionTicket);
 
+    // Limpiar notificaciones de inactividad del helper
+    try {
+      await this.notificationService.clearHelperInactivityNotifications(
+        credentialFound.user.id_user
+      );
+      this.logger.log(`Notificaciones de inactividad limpiadas para helper: ${credentialFound.user.name} ${credentialFound.user.lastname}`);
+    } catch (error) {
+      this.logger.error('Error al limpiar notificaciones de inactividad', error.stack);
+    }
+
+    // Limpiar notificaciones de tickets sin resolver (ya que se asignó un ticket)
+    try {
+      await this.notificationService.clearTicketsWithoutResolverNotifications();
+    } catch (error) {
+      this.logger.error('Error al limpiar notificaciones de tickets sin resolver', error.stack);
+    }
+
     await this.sendTicketUpdateNotification(
       ticketFound,
       resolutionTicketDto.response,
@@ -447,8 +466,7 @@ export class TicketsService {
   private getStatusName(id: number): string {
     const statusMap = {
       1: 'Pendientes',
-      2: 'En Progreso',
-      3: 'Completados',
+      2: 'Completados',
     };
     return statusMap[id] || 'Desconocido';
   }

@@ -5,9 +5,10 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { Credentials } from 'src/users/entities/Credentials.entity';
 import { GoogleStrategy } from './utils/GoogleStrategy';
+import { Payment } from 'src/payments/entities/entity.payment';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Credentials])],
+  imports: [TypeOrmModule.forFeature([User, Credentials, Payment])],
   controllers: [AuthController],
   providers: [
     AuthService,

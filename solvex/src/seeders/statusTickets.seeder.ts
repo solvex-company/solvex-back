@@ -13,8 +13,7 @@ export class TicketStatusSeeder {
   async seed() {
     const defaultStatus = [
       { id_status: 1, name: 'pending' },
-      { id_status: 2, name: 'inProgress' },
-      { id_status: 3, name: 'Completed' },
+      { id_status: 2, name: 'Completed' },
     ];
 
     for (const statusData of defaultStatus) {

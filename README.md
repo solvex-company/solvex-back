@@ -256,7 +256,7 @@ Access Token: APP_USR-5372043080270248-071710-1654fdad50fa9e4a557b269b264cfdef-2
 4. Usar el `paymentUrl` recibido para realizar el pago en Mercado Pago
 5. El backend recibirá los webhooks y actualizará el estado del pago automáticamente
 
-### IMPORTANTE PARA QUE FUNCIONE HAY QUE USAR NGROK
+### IMPORTANTE PARA QUE FUNCIONE AL HACER PRUEBAS LOCALES HAY QUE USAR NGROK
 
 MP_WEBHOOK_URL: 'https://abcd1234.ngrok.io/payments/webhook'
 
@@ -289,7 +289,7 @@ Importante: Cada vez que reinicies ngrok, la URL cambiará. Actualiza el notific
 2. **Consulta de notificaciones:**  
    - Cualquier usuario autenticado puede consultar sus notificaciones con `GET /notifications`.
    - Solo el admin verá notificaciones sobre la inactividad de helpers.
-   - Soporte y empleado verán notificaciones si en el futuro se implementan para ellos.
+   - Soporte verá notificaciones sobre los tickets sin resolver pasadas 24hs y empleados verán notificaciones si en el futuro se implementan para ellos.
 
 3. **Marcar como leída:**  
    - Cualquier usuario autenticado puede marcar sus notificaciones como leídas con `PATCH /notifications/:id/read`.

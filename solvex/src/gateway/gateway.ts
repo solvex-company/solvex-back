@@ -15,7 +15,7 @@ import { Role } from 'src/roles.enum';
 
 @WebSocketGateway({
   cors: {
-    origin: 'http://localhost:3000', //se tiene que activar cors manualmente para websockets
+    origin: 'https://solvex-front.vercel.app', //se tiene que activar cors manualmente para websockets
     credentials: true,
   },
 })
